@@ -5,8 +5,13 @@
  * Includes WebSocket support for real-time updates.
  */
 
+// When running on Cloudflare Pages (edith-dashboard.pages.dev), use the Worker as backend.
+// When running locally (localhost:3000), use the local Express server.
+const WORKER_BASE_URL = 'https://edith-api.tfsmrt.workers.dev';
+const IS_LOCAL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+
 const MissionControlAPI = {
-    baseUrl: '', // Same origin - no need for full URL
+    baseUrl: IS_LOCAL ? '' : WORKER_BASE_URL,
     ws: null,
     wsReconnectAttempts: 0,
     maxReconnectAttempts: 5,
@@ -16,7 +21,8 @@ const MissionControlAPI = {
      * Initialize the API and WebSocket connection
      */
     init() {
-        this.connectWebSocket();
+        // Only connect WebSocket when running locally (Worker doesn't support WS)
+        if (IS_LOCAL) this.connectWebSocket();
         return this;
     },
 

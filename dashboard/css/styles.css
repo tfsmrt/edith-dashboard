@@ -231,6 +231,8 @@ html {
     font-size: 16px;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    overflow: hidden;
+    height: 100%;
 }
 
 body {
@@ -238,10 +240,10 @@ body {
     background-color: hsl(var(--background));
     color: hsl(var(--foreground));
     line-height: 1.6;
-    min-height: 100vh;
+    height: 100%;
     transition: background-color var(--transition-normal), color var(--transition-normal);
     position: relative;
-    overflow-x: hidden;
+    overflow: hidden;
 }
 
 /* Clean background — no grid/vignette */

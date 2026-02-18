@@ -306,53 +306,7 @@
                         <button class="btn-small" onclick="saveDashboardName()">Save</button>
                     </div>
 
-                    <!-- Theme Selection -->
-                    <div class="setting-item theme-setting">
-                        <label>Theme</label>
-                        <div class="theme-grid" id="theme-grid">
-                            <button class="theme-card active" data-color-theme="default" title="Default (shadcn)">
-                                <div class="theme-preview preview-default"><span></span><span></span><span></span></div>
-                                <span class="theme-label">Default</span>
-                            </button>
-                            <button class="theme-card" data-color-theme="matrix" title="Matrix">
-                                <div class="theme-preview preview-matrix"><span></span><span></span><span></span></div>
-                                <span class="theme-label">Matrix</span>
-                            </button>
-                            <button class="theme-card" data-color-theme="jarvis" title="Blue Tech">
-                                <div class="theme-preview preview-jarvis"><span></span><span></span><span></span></div>
-                                <span class="theme-label">Blue Tech</span>
-                            </button>
-                            <button class="theme-card" data-color-theme="cyberpunk" title="Cyberpunk">
-                                <div class="theme-preview preview-cyberpunk"><span></span><span></span><span></span></div>
-                                <span class="theme-label">Cyberpunk</span>
-                            </button>
-                            <button class="theme-card" data-color-theme="amber" title="Amber Terminal">
-                                <div class="theme-preview preview-amber"><span></span><span></span><span></span></div>
-                                <span class="theme-label">Amber</span>
-                            </button>
-                            <button class="theme-card" data-color-theme="midnight" title="Midnight">
-                                <div class="theme-preview preview-midnight"><span></span><span></span><span></span></div>
-                                <span class="theme-label">Midnight</span>
-                            </button>
-                            <button class="theme-card" data-color-theme="ironman" title="Iron Man">
-                                <div class="theme-preview preview-ironman"><span></span><span></span><span></span></div>
-                                <span class="theme-label">Iron Man</span>
-                            </button>
-                            <button class="theme-card" data-color-theme="ocean" title="Ocean">
-                                <div class="theme-preview preview-ocean"><span></span><span></span><span></span></div>
-                                <span class="theme-label">Ocean</span>
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- Dark/Light Mode -->
-                    <div class="setting-item">
-                        <label>Mode</label>
-                        <div class="mode-toggle">
-                            <button class="mode-btn active" data-theme="dark" title="Dark mode">🌙 Dark</button>
-                            <button class="mode-btn" data-theme="light" title="Light mode">☀️ Light</button>
-                        </div>
-                    </div>
+                    <!-- Theme and Mode removed — use header toggle for dark/light -->
                 </div>
             </div>
         </aside>
@@ -660,36 +614,7 @@
         </div>
     </div>
 
-    <!-- Chat Panel (bottom-right floating) -->
-    <div class="chat-panel" id="chat-panel">
-        <div class="chat-header" onclick="toggleChatPanel()">
-            <div class="chat-header-left">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
-                <span class="chat-title">E.D.I.T.H Chat</span>
-            </div>
-            <div class="chat-header-right">
-                <span id="chat-unread-header" class="chat-unread-count" style="display:none">0</span>
-                <button class="chat-minimize-btn" aria-label="Toggle chat">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
-                </button>
-            </div>
-        </div>
-        <div class="chat-body">
-            <div id="chat-messages" class="chat-messages"></div>
-            <div class="chat-input-wrapper">
-                <input type="text" id="chat-input" class="chat-input" placeholder="Type a message... @mention an agent" onkeydown="if(event.key==='Enter')sendChatMessage()">
-                <button class="chat-send-btn" onclick="sendChatMessage()">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Chat Toggle Button (when panel is closed) -->
-    <button class="chat-toggle-btn" id="chat-toggle-btn" onclick="toggleChatPanel()" aria-label="Open chat">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
-        <span id="chat-unread-fab" class="chat-fab-badge" style="display:none">0</span>
-    </button>
+    <!-- Chat panel removed — tasks are assigned directly via E.D.I.T.H -->
 
     <!-- Instructions Panel -->
     <div class="instructions-panel" id="instructions-panel">

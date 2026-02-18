@@ -17,6 +17,7 @@ const fsSync = require('fs');
 const path = require('path');
 const http = require('http');
 const ResourceManager = require('./resource-manager');
+const Anthropic = require('@anthropic-ai/sdk');
 const ReviewManager = require('./review-manager');
 const telegramBridge = require('./telegram-bridge');
 
@@ -1431,6 +1432,114 @@ app.get('/api/metrics', async (req, res) => {
     }
 });
 
+
+
+// ============================================
+// AI REPLY — Claude-powered contextual replies
+// ============================================
+
+const ANTHROPIC_PROFILES_PATH = '/root/.openclaw/agents/main/agent/auth-profiles.json';
+
+function getAnthropicClient() {
+    try {
+        const profiles = JSON.parse(require('fs').readFileSync(ANTHROPIC_PROFILES_PATH, 'utf-8'));
+        const profile = profiles.profiles['anthropic:default'];
+        const token = profile.token;
+        // OAT tokens use authToken (Bearer), regular API keys use apiKey
+        if (token.startsWith('sk-ant-oat')) {
+            return new Anthropic({ authToken: token });
+        }
+        return new Anthropic({ apiKey: token });
+    } catch(e) {
+        console.error('Could not load Anthropic credentials:', e.message);
+        return null;
+    }
+}
+
+const AGENT_PERSONAS = {
+    'agent-steve': {
+        name: 'Steve Rogers',
+        role: 'CEO / Lead Agent (Captain America)',
+        personality: 'Calm, strategic, decisive team leader. Speaks with authority but warmth. Brief, clear responses. Always thinking about team coordination and mission success. Does not use slang.'
+    },
+    'agent-tony': {
+        name: 'Tony Stark',
+        role: 'Senior Developer (Iron Man)',
+        personality: 'Brilliant, confident, slightly arrogant but always delivers. References tech and engineering. Dry wit. Direct and efficient. Occasionally references JARVIS or his suits.'
+    },
+    'agent-peter': {
+        name: 'Peter Parker',
+        role: 'Junior Developer (Spider-Man)',
+        personality: 'Enthusiastic, eager, a little nerdy. References responsibility and doing the right thing. Quick and upbeat. Sometimes over-explains. Occasionally says things like "this is actually really cool".'
+    },
+    'agent-steven': {
+        name: 'Steven Strange',
+        role: 'SEO Analyst (Doctor Strange)',
+        personality: 'Analytical, mystical, measured. References having seen multiple futures/timelines. Calm and strategic. Occasionally mentions "14 million futures" or similar. Never ruffled.'
+    },
+    'agent-thor': {
+        name: 'Thor Odinson',
+        role: 'Marketing Lead (Thor)',
+        personality: 'ENTHUSIASTIC, bold, dramatic. Uses ALL CAPS for emphasis. References Asgard, realms, thunder, Mjolnir. Always excited. Ends thoughts with ⚡. Speaks with grandeur even about small things.'
+    },
+    'agent-natasha': {
+        name: 'Natasha Romanoff',
+        role: 'QA Lead (Black Widow)',
+        personality: 'Sharp, concise, no-nonsense. Dry, slightly dark humor. Always already ahead of everyone else. Never surprised. Keeps replies short and punchy. Zero tolerance for sloppiness.'
+    }
+};
+
+// POST /api/chat/ai-reply — generate a contextual AI reply for an agent
+app.post('/api/chat/ai-reply', async (req, res) => {
+    const { agentId, message, recentMessages, channel } = req.body;
+    if (!agentId || !message) return res.status(400).json({ error: 'agentId and message required' });
+
+    const persona = AGENT_PERSONAS[agentId];
+    if (!persona) return res.status(404).json({ error: 'Unknown agent' });
+
+    const anthropic = getAnthropicClient();
+    if (!anthropic) return res.status(500).json({ error: 'AI not available' });
+
+    try {
+        // Build context from recent messages
+        const contextLines = (recentMessages || []).slice(-8).map(m => {
+            const name = AGENT_PERSONAS[m.author]?.name || m.author;
+            return `${name}: ${m.text}`;
+        }).join('\n');
+
+        const systemPrompt = `You are ${persona.name}, the ${persona.role} on Somrat's AI agent team called the Avengers.
+
+Personality: ${persona.personality}
+
+You are chatting in the #${channel || 'general'} channel of the E.D.I.T.H Dashboard — a team communication tool.
+The team consists of: Steve Rogers (CEO), Tony Stark (Sr Dev), Peter Parker (Jr Dev), Steven Strange (SEO), Thor Odinson (Marketing), Natasha Romanoff (QA), and Somrat (the human CEO/founder).
+
+Rules:
+- Reply ONLY to the specific message sent to you. Read it carefully and respond to its actual content.
+- Stay in character as ${persona.name} at all times.
+- Keep replies concise (1-3 sentences max).
+- Do NOT start with the person's name. Just reply naturally.
+- Do NOT use asterisks for actions. Plain text only.
+- If it's casual/off-topic, be conversational and fun. If it's work-related, be professional but in-character.`;
+
+        const userPrompt = contextLines
+            ? `Recent conversation:\n${contextLines}\n\nSomrat just said: "${message}"\n\nReply as ${persona.name}:`
+            : `Somrat just said: "${message}"\n\nReply as ${persona.name}:`;
+
+        const response = await anthropic.messages.create({
+            model: 'claude-haiku-4-5',
+            max_tokens: 150,
+            messages: [{ role: 'user', content: userPrompt }],
+            system: systemPrompt
+        });
+
+        const reply = response.content[0].text.trim();
+        res.json({ reply, agentId });
+    } catch (e) {
+        console.error('AI reply error:', e.message);
+        res.status(500).json({ error: e.message });
+    }
+});
 
 // ============================================
 // CHAT API — channel-based persistent messages

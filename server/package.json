@@ -10,10 +10,11 @@
     "dev": "node index.js --watch"
   },
   "dependencies": {
-    "express": "^4.18.2",
-    "ws": "^8.14.2",
+    "@anthropic-ai/sdk": "^0.76.0",
     "chokidar": "^3.5.3",
-    "cors": "^2.8.5"
+    "cors": "^2.8.5",
+    "express": "^4.18.2",
+    "ws": "^8.14.2"
   },
   "engines": {
     "node": ">=18.0.0"

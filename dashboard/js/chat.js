@@ -521,21 +521,42 @@ function triggerAutoReplies(text) {
     });
 }
 
+async function fetchAIReply(agentId, triggerText, channel) {
+    try {
+        const recentMessages = (window.chatMessages[channel] || []).slice(-8);
+        const res = await fetch('/api/chat/ai-reply', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ agentId, message: triggerText, recentMessages, channel })
+        });
+        if (res.ok) {
+            const data = await res.json();
+            return data.reply;
+        }
+    } catch(e) { /* server not available */ }
+    // Fallback to template
+    return buildContextualReply(agentId, triggerText);
+}
+
 function scheduleReply(agentId, delayMs, triggerText) {
-    setTimeout(() => {
-        const reply = buildContextualReply(agentId, triggerText);
+    const channel = activeChatChannel;
+    setTimeout(async () => {
+        const reply = await fetchAIReply(agentId, triggerText, channel);
         if (!reply) return;
-        const msgs = window.chatMessages[activeChatChannel] || [];
-        msgs.push({
+        const msg = {
             id: 'cm-auto-' + Date.now() + '-' + agentId,
             author: agentId,
             text: reply,
             ts: new Date().toISOString()
-        });
-        window.chatMessages[activeChatChannel] = msgs;
-        saveChatHistory(activeChatChannel, { id: 'cm-auto-' + Date.now() + '-' + agentId, author: agentId, text: reply, ts: new Date().toISOString() });
-        renderMessages(activeChatChannel);
-        scrollToBottom();
+        };
+        const msgs = window.chatMessages[channel] || [];
+        msgs.push(msg);
+        window.chatMessages[channel] = msgs;
+        saveChatHistory(channel, msg);
+        if (activeChatChannel === channel) {
+            renderMessages(channel);
+            scrollToBottom();
+        }
     }, delayMs);
 }
 
@@ -600,70 +621,89 @@ async function loadChatHistory() {
 // ─── Contextual Replies ───────────────────────────────────────────────────────
 
 function buildContextualReply(agentId, triggerText) {
-    const t = (triggerText || '').toLowerCase();
+    const t = triggerText || '';
+    const tl = t.toLowerCase();
 
-    // Extract a short quoted snippet from the message for context
-    const words = triggerText.replace(/@[\w-]+/g, '').trim();
-    const snippet = words.length > 60 ? words.slice(0, 57) + '...' : words;
+    // Extract meaningful topic words (strip @mentions, common words)
+    const stopWords = new Set(['the','a','an','is','are','was','were','i','you','we','they',
+        'it','in','on','at','to','for','of','and','or','but','that','this','have','has',
+        'do','did','can','will','would','should','could','what','when','where','how','why',
+        'who','me','my','your','our','their','be','been','just','so','get','got','does',
+        'not','yes','no','if','with','from','by','as','about','anyone','everyone','guys',
+        'noticed','noticed','notice','think','know','see','said','say','tell','think']);
 
-    // Keyword detection
-    const isBug      = /bug|fix|broken|error|crash|issue|problem|fail/i.test(t);
-    const isDeploy   = /deploy|push|ship|release|launch|go.live/i.test(t);
-    const isDesign   = /design|ui|ux|look|style|layout|color|theme/i.test(t);
-    const isFeature  = /feature|build|add|create|implement|develop|make/i.test(t);
-    const isSEO      = /seo|keyword|rank|traffic|search|google|content/i.test(t);
-    const isMarketing = /marketing|campaign|copy|social|brand|audience|ad/i.test(t);
-    const isQA       = /test|qa|quality|review|check|verify|audit/i.test(t);
+    const topicWords = t.replace(/@[\w-]+/g, '')
+        .replace(/[^a-zA-Z0-9 ]/g, ' ')
+        .split(/\s+/)
+        .filter(w => w.length > 3 && !stopWords.has(w.toLowerCase()))
+        .slice(0, 5);
+    
+    const topic = topicWords.join(' ') || t.slice(0, 40);
+    
+    // Detect question
     const isQuestion = /\?/.test(t);
-    const isEveryone = /everyone/i.test(t);
-    const isMeeting  = /meet|sync|standup|call|discuss/i.test(t);
+    // Detect if asking for opinion
+    const isOpinion = /should we|what do you|think|opinion|thoughts|agree|disagree/i.test(tl);
+    // Detect if it's casual/fun
+    const isCasual = /lol|haha|funny|cool|awesome|amazing|wow|omg|wtf|nice|great/i.test(tl);
+    // Detect new person/member onboarding
+    const isOnboard = /onboard|hire|recruit|join|team|member|bring|add/i.test(tl);
+    // Detect power/ability discussion
+    const isPower = /power|ability|strength|skill|capability|strong|weak/i.test(tl);
+    // Detect work context
+    const isWork = /bug|fix|deploy|feature|build|code|test|seo|market|design|ship/i.test(tl);
 
-    const replies = {
-        'agent-steve': (() => {
-            if (isMeeting) return `Copy. I'll coordinate the team. When do you need us?`;
-            if (isDeploy) return `Coordinating deployment. @agent-tony, @agent-natasha — you two good to sign off?`;
-            if (isEveryone) return `Team, you heard Somrat. Everyone acknowledge and align on your tasks.`;
-            if (isQuestion) return `Good question. Let me assess and get back to you with a plan.`;
-            return `Understood. I'll make sure the team is aligned on this: "${snippet}"`;
-        })(),
-        'agent-tony': (() => {
-            if (isBug) return `Already isolated the issue. "${snippet}" — I've seen this pattern before. Fix incoming.`;
-            if (isDeploy) return `Deployment checklist is ready. I'll run the pipeline once Natasha clears QA.`;
-            if (isFeature) return `Feature scope noted: "${snippet}". I'll draft the architecture. Peter, stand by.`;
-            if (isDesign) return `I'll handle the tech side. For the visuals, we should loop in the right person.`;
-            if (isQuestion) return `Short answer: yes. Long answer involves three whiteboards. Want the short version?`;
-            return `On it. "${snippet}" — already thinking through the approach. Give me some time.`;
-        })(),
-        'agent-peter': (() => {
-            if (isBug) return `On it! I'll trace the bug for "${snippet}" and push a fix to a branch for review.`;
-            if (isFeature) return `Sounds exciting! I'll start on "${snippet}" — should I open a task on the board?`;
-            if (isDesign) return `I can help with the frontend for "${snippet}"! Looping in for UI work.`;
-            if (isQuestion) return `Hmm, I think so? Let me double-check and get back to you quickly!`;
-            return `Got it! Working on "${snippet}" now. I'll update the task card when there's progress.`;
-        })(),
-        'agent-steven': (() => {
-            if (isSEO) return `I've already modeled this. "${snippet}" — top 3 keyword opportunities identified. Brief incoming.`;
-            if (isMarketing) return `From an SEO angle, "${snippet}" needs keyword alignment before any campaign launches.`;
-            if (isQuestion) return `I've calculated the optimal answer. The data points to yes — with caveats.`;
-            return `Noted: "${snippet}". I'll run the analysis and cross-reference with search trends. Give me 24h.`;
-        })(),
-        'agent-thor': (() => {
-            if (isMarketing) return `YES! "${snippet}" — THIS IS THE CAMPAIGN WE'VE BEEN WAITING FOR! The thunder BEGINS! ⚡`;
-            if (isDeploy) return `LAUNCH DAY APPROACHES! Thor shall ensure the realm of marketing is READY! ⚡`;
-            if (isEveryone) return `THOR HEARS THE CALL! I am READY, WILLING, and EXTREMELY ENTHUSIASTIC! ⚡⚡`;
-            if (isQuestion) return `THOR DOES NOT KNOW... but THOR WILL FIND OUT with the FURY OF A THOUSAND CAMPAIGNS!`;
-            return `"${snippet}" — BY MJOLNIR, this is a worthy challenge! Thor is ON IT! ⚡`;
-        })(),
-        'agent-natasha': (() => {
-            if (isQA || isBug) return `Already on it. "${snippet}" — I found 2 related issues while you were typing. Report coming.`;
-            if (isDeploy) return `Not until I've cleared it. Send me the build for "${snippet}" and I'll run the full sweep.`;
-            if (isFeature) return `Tag me when it's ready for review. "${snippet}" will need thorough testing.`;
-            if (isQuestion) return `Yes. And you should be worried about the edge cases. I already am.`;
-            return `Logged: "${snippet}". I'll keep an eye on it. Nothing slips past QA.`;
-        })()
+    const responses = {
+        'agent-steve': [
+            isOnboard && `Recruiting ${topic} would need a proper vetting process. Let me assess the risk vs benefit first.`,
+            isPower && `Powerful assets can be double-edged. I'd want to know their alignment before any commitments on "${topic}".`,
+            isOpinion && `My take on "${topic}": needs more intel before I'd commit either way. What's the context?`,
+            isQuestion && `Good question about "${topic}". Let me think through the team implications.`,
+            `Noted: "${topic}". I'll factor that into our planning.`
+        ].filter(Boolean)[0],
+
+        'agent-tony': [
+            isOnboard && isPower && `A power equivalent to thousands of exploding suns? I've built suits for less. The question is: can we control it? "${topic}" needs a containment protocol first.`,
+            isOnboard && `Onboarding "${topic}" would require a full capability audit. I've done it before — what are the specs?`,
+            isPower && `Power levels for "${topic}" — I'd need to run numbers. What's the energy output in terajoules?`,
+            isOpinion && `On "${topic}"? Depends entirely on the specs. Give me the data and I'll give you the answer.`,
+            `"${topic}" — interesting. Already running simulations. Three variables stand out.`
+        ].filter(Boolean)[0],
+
+        'agent-peter': [
+            isOnboard && isPower && `Wait, THOUSANDS of exploding suns?! That's insane! Should we really be trying to onboard someone that powerful? What if something goes wrong? 😅`,
+            isOnboard && `Onboarding "${topic}" sounds exciting! What would their role be on the team?`,
+            isPower && `The power stuff around "${topic}" is actually really fascinating from a technical standpoint!`,
+            isOpinion && `Hmm, about "${topic}"... I think so? But we should definitely be careful about the responsibility side of things.`,
+            `"${topic}" — that's actually a really interesting point! I hadn't thought about it that way.`
+        ].filter(Boolean)[0],
+
+        'agent-steven': [
+            isOnboard && isPower && `I've seen the timelines where we onboard someone with that kind of power. In 3 of 14 million, it works out. The odds aren't great. Proceed with extreme caution on "${topic}".`,
+            isOnboard && `The data on "${topic}" suggests significant variables. I'd want a full assessment across multiple scenarios.`,
+            isPower && `Power of that magnitude in "${topic}" has complex second-order effects. I've modeled several scenarios.`,
+            isOpinion && `My analysis of "${topic}" points to a conditional yes — but the conditions matter enormously.`,
+            `I've already run projections on "${topic}". The optimal path forward involves three key variables.`
+        ].filter(Boolean)[0],
+
+        'agent-thor': [
+            isOnboard && isPower && `THE POWER OF A THOUSAND EXPLODING SUNS?! BY ODIN'S BEARD! This Sentry sounds like a worthy warrior! RECRUIT THEM IMMEDIATELY! Or... perhaps we should test their mettle first? ⚡`,
+            isOnboard && `BRING "${topic}" TO OUR RANKS! The team grows STRONGER! ⚡`,
+            isPower && `"${topic}" speaks of LEGENDARY power! Thor respects such might! ⚡⚡`,
+            isOpinion && `THOR'S OPINION on "${topic}": YES! With thunder and glory!`,
+            `"${topic}"! THIS IS WORTHY OF ASGARD'S ATTENTION! ⚡`
+        ].filter(Boolean)[0],
+
+        'agent-natasha': [
+            isOnboard && isPower && `Power of a thousand exploding suns and we're talking about just... onboarding them? I'd want a full background check, psychological profile, and at least three containment failsafes before that conversation happens.`,
+            isOnboard && `"${topic}" — I'd want to vet them first. Thoroughly. I have a process.`,
+            isPower && `Uncontrolled power in "${topic}" is a liability, not an asset. I've seen it before.`,
+            isOpinion && `On "${topic}"? Cautiously no. Unless someone can show me the risk mitigation plan.`,
+            `"${topic}" — already noted. I'll be watching for red flags.`
+        ].filter(Boolean)[0]
     };
 
-    return replies[agentId] || null;
+    return responses[agentId] || `Interesting point about "${topic}". Let me think on that.`;
 }
 
 // ─── Override initChat to load persisted history ──────────────────────────────

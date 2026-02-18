@@ -34,6 +34,9 @@ async function init() {
     // Render the dashboard
     renderDashboard();
 
+    // Init chat system
+    if (typeof initChat === "function") initChat();
+
     // Load reports
     loadFiles('reports');
 

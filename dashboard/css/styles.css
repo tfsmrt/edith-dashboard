@@ -481,7 +481,7 @@ body::after {
 
 .main-content {
     display: flex;
-    height: calc(100vh - 73px - 45px); /* Account for header and footer */
+    height: calc(100vh - 73px); /* No footer */
     overflow: hidden;
     position: relative;
     z-index: 1;

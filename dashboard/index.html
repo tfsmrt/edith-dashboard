@@ -48,6 +48,17 @@
             <span class="version">v0.9.4</span>
         </div>
         <div class="header-right">
+            <!-- View Toggle -->
+            <div class="view-toggle">
+                <button class="view-toggle-btn active" id="view-btn-board" onclick="showBoardView()">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+                    Board
+                </button>
+                <button class="view-toggle-btn" id="view-btn-chat" onclick="showChatView()">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+                    Chat
+                </button>
+            </div>
             <!-- Theme Toggle Button -->
             <button id="theme-toggle" onclick="toggleTheme()" aria-label="Toggle dark/light mode" title="Toggle dark/light mode">🌙</button>
             <div class="metrics">
@@ -80,7 +91,7 @@
 
     <main class="main-content">
         <!-- Sidebar (LEFT) - Command Panel -->
-        <aside class="sidebar">
+        <aside class="sidebar" id="left-sidebar">
             <!-- Humans Section -->
             <div class="sidebar-section">
                 <div class="sidebar-header">
@@ -120,7 +131,7 @@
         </aside>
 
         <!-- Kanban Board -->
-        <div class="kanban-board" id="kanban-board">
+        <div id="kanban-board-wrapper" style="flex:1;display:flex;overflow:hidden"><div class="kanban-board" id="kanban-board">
             <div class="kanban-column" data-status="INBOX">
                 <div class="column-header">
                     <div class="column-title-wrapper">
@@ -176,9 +187,47 @@
                 <div class="task-list" id="tasks-DONE"></div>
             </div>
         </div>
+        </div><!-- /kanban-board-wrapper -->
+
+        <!-- Chat View -->
+        <div class="chat-view" id="chat-view">
+            <aside class="chat-sidebar">
+                <div class="chat-server-header">
+                    <div class="chat-server-icon">E</div>
+                    <span>E.D.I.T.H</span>
+                </div>
+                <div class="chat-channels-scroll" id="chat-channel-list"></div>
+            </aside>
+            <div class="chat-main">
+                <div class="chat-channel-header">
+                    <span class="chat-channel-header-hash">#</span>
+                    <span class="chat-channel-header-name" id="chat-active-channel-name">general</span>
+                    <div class="chat-channel-header-divider"></div>
+                    <span class="chat-channel-header-topic" id="chat-active-channel-topic">General team discussion</span>
+                </div>
+                <div class="chat-messages-area" id="chat-messages-area">
+                    <div id="chat-messages-list"></div>
+                </div>
+                <div class="chat-input-bar" style="position:relative">
+                    <div id="mention-dropdown" class="mention-dropdown"></div>
+                    <div class="chat-input-inner">
+                        <input type="text" id="chat-message-input" class="chat-text-input"
+                            placeholder="Message #general"
+                            onkeydown="onChatInput(event)" oninput="onChatInput(event)">
+                        <button class="chat-send-btn" onclick="sendChatMsg()">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <aside class="chat-members-sidebar">
+                <div class="chat-members-header">Members</div>
+                <div id="chat-members-list"></div>
+            </aside>
+        </div>
 
         <!-- Right Sidebar - Reports, Queue & Settings -->
-        <aside class="sidebar-right">
+        <aside class="sidebar-right" id="right-sidebar">
             <!-- Reports Section -->
             <div class="right-section reports-section">
                 <div class="right-section-header">
@@ -998,8 +1047,10 @@
         </div>
     </div>
 
+    <link rel="stylesheet" href="./css/chat.css">
     <script src="./js/api.js"></script>
     <script src="./js/data.js"></script>
     <script src="./js/app.js"></script>
+    <script src="./js/chat.js"></script>
 </body>
 </html>

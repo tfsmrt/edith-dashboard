@@ -1,81 +1,23 @@
-name: Deploy Dashboard to GitHub Pages
+name: Deploy to Cloudflare Pages
 
 on:
   push:
-    branches: [ main ]
-    paths:
-      - 'dashboard/**'
-      - 'index.html'
-      - '.github/workflows/deploy.yml'
+    branches:
+      - main
   workflow_dispatch:
-
-# IMPORTANT: This workflow deploys STATIC dashboard assets only!
-# User data (.mission-control/) is gitignored and NOT deployed via GitHub Actions.
-#
-# For production deployments with real data:
-#   1. Run locally: ./scripts/safe-deploy.sh
-#   2. Or use the dashboard's API mode to fetch data from your server
-#
-# Demo data is ONLY loaded when explicitly requested via safe-deploy.sh --demo
-
-permissions:
-  contents: read
-  pages: write
-  id-token: write
-
-concurrency:
-  group: "pages"
-  cancel-in-progress: false
 
 jobs:
   deploy:
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
+    name: Deploy Dashboard
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Prepare dashboard (static assets only)
-        run: |
-          echo "📦 Deploying static dashboard assets"
-          echo ""
-          echo "⚠️  NOTE: User data is NOT included in GitHub Actions deployments."
-          echo "    User data is gitignored and lives on your server, not in the repo."
-          echo ""
-          echo "    To deploy with data, run locally:"
-          echo "      ./scripts/safe-deploy.sh"
-          echo ""
-          
-          # Create minimal placeholder to indicate no data
-          mkdir -p dashboard/data
-          cat > dashboard/data/_deployment_info.json << 'EOF'
-          {
-            "source": "github-actions",
-            "hasUserData": false,
-            "message": "This is a static deployment. Connect to your Mission Control server for live data.",
-            "timestamp": "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
-          }
-          EOF
-          
-          # Create empty index files for the dashboard to handle gracefully
-          for dir in agents humans tasks queue messages; do
-            mkdir -p "dashboard/data/$dir"
-            touch "dashboard/data/$dir/.gitkeep"
-            echo "" > "dashboard/data/$dir/_index.txt"
-          done
-          
-          echo "✅ Static dashboard prepared"
-
-      - name: Setup Pages
-        uses: actions/configure-pages@v5
-
-      - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
+      - name: Deploy to Cloudflare Pages
+        uses: cloudflare/wrangler-action@v3
         with:
-          path: '.'
-
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: pages deploy dashboard --project-name=mission-control --branch=main

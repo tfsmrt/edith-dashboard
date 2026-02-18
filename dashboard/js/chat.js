@@ -41,7 +41,8 @@ function renderChannelList() {
 
     let html = '';
     Object.entries(categories).forEach(([cat, chs]) => {
-        html += `<div class="chat-category"><div class="chat-category-label">${cat}</div>`;
+        const isFirstCat = Object.keys(categories).indexOf(cat) === 0;
+        html += `<div class="chat-category"><div class="chat-category-label" style="display:flex;align-items:center;justify-content:space-between">${cat} ${isFirstCat ? '<button onclick="showCreateChannelModal()" title="New channel" style="background:none;border:none;cursor:pointer;color:hsl(var(--muted-foreground));font-size:1rem;line-height:1;padding:0 2px" onmouseover="this.style.color=\'hsl(var(--foreground))\'" onmouseout="this.style.color=\'hsl(var(--muted-foreground))\'" >+</button>' : ''}</div>`;
         chs.forEach(ch => {
             const isActive = !activeDM && ch.id === activeChatChannel;
             html += `<div class="chat-channel-item${isActive ? ' active' : ''}"
@@ -56,7 +57,7 @@ function renderChannelList() {
     // Direct Messages section
     const agents = allMembers.filter(m => m.kind === 'agent');
     if (agents.length) {
-        html += `<div class="chat-category"><div class="chat-category-label">Direct Messages</div>`;
+        html += `<div class="chat-category"><div class="chat-category-label" style="display:flex;align-items:center;justify-content:space-between">Direct Messages</div>`;
         agents.forEach(agent => {
             const isActive = activeDM === agent.id;
             const initials = agent.name.split(' ').map(w => w[0]).join('').slice(0,2).toUpperCase();
@@ -101,7 +102,7 @@ function switchChannel(channelId, pushState = true) {
 
     // Update URL without reload
     if (pushState) {
-        const newUrl = `/chat/${channelId}`;
+        const newUrl = `/chat/channel/${channelId}`;
         if (window.location.pathname !== newUrl) {
             history.pushState({ channel: channelId }, `#${ch.name} — E.D.I.T.H`, newUrl);
         }
@@ -133,7 +134,7 @@ function openDM(agentId, pushState = true) {
     if (hashEl) hashEl.textContent = '💬';
 
     if (pushState) {
-        const newUrl = `/chat/${agentId}`;
+        const newUrl = `/chat/user/${agentId}`;
         if (window.location.pathname !== newUrl) {
             history.pushState({ dm: agentId }, `${agentName} — E.D.I.T.H`, newUrl);
         }
@@ -870,6 +871,7 @@ function buildContextualReply(agentId, triggerText) {
 
 async function initChat() {
     buildMemberList();
+    loadCustomChannels(); // load user-created channels
     await loadChatHistory(); // load persisted messages before rendering
     renderChannelList();
     switchChannel('general');
@@ -879,15 +881,17 @@ async function initChat() {
 // ─── URL Router ───────────────────────────────────────────────────────────────
 
 function routeToPath(path, pushState = false) {
-    const dmMatch = path.match(/^\/chat\/(agent-[\w-]+)$/);
-    const chMatch = path.match(/^\/chat\/?([\w-]*)$/);
+    const dmMatch      = path.match(/^\/chat\/user\/([\w-]+)$/);
+    const channelMatch = path.match(/^\/chat\/channel\/([\w-]+)$/);
+    const chatBase     = path.match(/^\/chat\/?$/);
 
     if (dmMatch) {
         showChatView(null);
         setTimeout(() => openDM(dmMatch[1], pushState), 150);
-    } else if (chMatch) {
-        const channelId = chMatch[1] || 'general';
-        showChatView(channelId);
+    } else if (channelMatch) {
+        showChatView(channelMatch[1]);
+    } else if (chatBase) {
+        showChatView('general');
     } else {
         showBoardView();
     }
@@ -898,11 +902,108 @@ function initRouter() {
     if (path.startsWith('/chat')) {
         setTimeout(() => routeToPath(path, false), 200);
     }
-
-    window.addEventListener('popstate', (e) => {
+    window.addEventListener('popstate', () => {
         routeToPath(window.location.pathname, false);
     });
 }
+
+// ─── Create Channel ───────────────────────────────────────────────────────────
+
+function showCreateChannelModal() {
+    const existing = document.getElementById('create-channel-modal');
+    if (existing) { existing.style.display = 'flex'; return; }
+
+    const modal = document.createElement('div');
+    modal.id = 'create-channel-modal';
+    modal.style.cssText = 'position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.5)';
+    modal.innerHTML = `
+        <div style="background:hsl(var(--card));border:1px solid hsl(var(--border));border-radius:12px;padding:24px;width:360px;max-width:90vw">
+            <h3 style="margin:0 0 8px;font-size:1rem;font-weight:600;color:hsl(var(--foreground))">Create a Channel</h3>
+            <p style="margin:0 0 16px;font-size:0.8rem;color:hsl(var(--muted-foreground))">Channel names are lowercase, no spaces.</p>
+            <div style="margin-bottom:8px">
+                <label style="font-size:0.75rem;font-weight:500;color:hsl(var(--foreground));text-transform:uppercase;letter-spacing:.05em">Channel Name</label>
+                <div style="display:flex;align-items:center;margin-top:4px;background:hsl(var(--muted));border:1px solid hsl(var(--border));border-radius:6px;padding:8px 12px;gap:6px">
+                    <span style="color:hsl(var(--muted-foreground));font-size:1rem">#</span>
+                    <input id="new-channel-name" type="text" placeholder="e.g. random" maxlength="32"
+                        style="flex:1;background:none;border:none;outline:none;font-size:0.875rem;color:hsl(var(--foreground));font-family:inherit"
+                        oninput="this.value=this.value.toLowerCase().replace(/[^a-z0-9-]/g,'-').replace(/-+/g,'-')"
+                        onkeydown="if(event.key==='Enter')submitCreateChannel()">
+                </div>
+            </div>
+            <div style="margin-bottom:16px">
+                <label style="font-size:0.75rem;font-weight:500;color:hsl(var(--foreground));text-transform:uppercase;letter-spacing:.05em">Topic (optional)</label>
+                <input id="new-channel-topic" type="text" placeholder="What's this channel about?"
+                    style="margin-top:4px;width:100%;box-sizing:border-box;background:hsl(var(--muted));border:1px solid hsl(var(--border));border-radius:6px;padding:8px 12px;font-size:0.875rem;color:hsl(var(--foreground));font-family:inherit;outline:none"
+                    onkeydown="if(event.key==='Enter')submitCreateChannel()">
+            </div>
+            <div style="display:flex;gap:8px;justify-content:flex-end">
+                <button onclick="closeCreateChannelModal()"
+                    style="padding:7px 16px;border-radius:6px;border:1px solid hsl(var(--border));background:transparent;color:hsl(var(--muted-foreground));cursor:pointer;font-size:0.875rem;font-family:inherit">
+                    Cancel
+                </button>
+                <button onclick="submitCreateChannel()"
+                    style="padding:7px 16px;border-radius:6px;border:none;background:hsl(var(--primary));color:hsl(var(--primary-foreground));cursor:pointer;font-size:0.875rem;font-weight:500;font-family:inherit">
+                    Create Channel
+                </button>
+            </div>
+        </div>`;
+    document.body.appendChild(modal);
+    modal.addEventListener('click', e => { if (e.target === modal) closeCreateChannelModal(); });
+    setTimeout(() => document.getElementById('new-channel-name')?.focus(), 50);
+}
+
+function closeCreateChannelModal() {
+    const modal = document.getElementById('create-channel-modal');
+    if (modal) modal.style.display = 'none';
+}
+
+function submitCreateChannel() {
+    const nameInput  = document.getElementById('new-channel-name');
+    const topicInput = document.getElementById('new-channel-topic');
+    const name  = (nameInput?.value || '').trim().replace(/^-+|-+$/g, '');
+    const topic = (topicInput?.value || '').trim();
+
+    if (!name) { nameInput?.focus(); return; }
+
+    // Check for duplicates
+    const exists = (window.chatChannels || []).find(c => c.id === name);
+    if (exists) {
+        switchChannel(name);
+        closeCreateChannelModal();
+        return;
+    }
+
+    // Determine category
+    const category = name.includes('dev') || name.includes('code') ? 'Development'
+        : name.includes('seo') || name.includes('market') ? 'Marketing'
+        : name.includes('qa') || name.includes('test') ? 'Quality'
+        : 'Team';
+
+    const newChannel = { id: name, name, category, topic: topic || `#${name} channel` };
+    window.chatChannels = [...(window.chatChannels || []), newChannel];
+    window.chatMessages[name] = [];
+
+    // Persist custom channels
+    try { localStorage.setItem('edith-custom-channels', JSON.stringify(
+        (window.chatChannels || []).filter(c => !['general','announcements','dev-team','seo-marketing','qa','off-topic'].includes(c.id))
+    )); } catch(e) {}
+
+    closeCreateChannelModal();
+    renderChannelList();
+    switchChannel(name);
+}
+
+function loadCustomChannels() {
+    try {
+        const saved = JSON.parse(localStorage.getItem('edith-custom-channels') || '[]');
+        saved.forEach(ch => {
+            if (!(window.chatChannels || []).find(c => c.id === ch.id)) {
+                window.chatChannels.push(ch);
+            }
+        });
+    } catch(e) {}
+}
+
 
 // Run router after page init
 if (document.readyState === 'loading') {

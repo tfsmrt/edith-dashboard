@@ -620,90 +620,140 @@ async function loadChatHistory() {
 
 // ─── Contextual Replies ───────────────────────────────────────────────────────
 
+function getAgentTasks(agentId) {
+    try {
+        const data = window.missionControlData;
+        if (!data) return [];
+        return (data.getTasks() || []).filter(t =>
+            t.assignee === agentId && t.status !== 'DONE'
+        ).map(t => ({ title: t.title, status: t.status, priority: t.priority }));
+    } catch(e) { return []; }
+}
+
 function buildContextualReply(agentId, triggerText) {
     const t = triggerText || '';
     const tl = t.toLowerCase();
+    const tasks = getAgentTasks(agentId);
+    const hasTask = tasks.length > 0;
+    const currentTask = hasTask ? tasks[0].title : null;
+    const taskStatus = hasTask ? tasks[0].status : null;
 
-    // Extract meaningful topic words (strip @mentions, common words)
-    const stopWords = new Set(['the','a','an','is','are','was','were','i','you','we','they',
-        'it','in','on','at','to','for','of','and','or','but','that','this','have','has',
-        'do','did','can','will','would','should','could','what','when','where','how','why',
-        'who','me','my','your','our','their','be','been','just','so','get','got','does',
-        'not','yes','no','if','with','from','by','as','about','anyone','everyone','guys',
-        'noticed','noticed','notice','think','know','see','said','say','tell','think']);
+    // Strip mentions, pull out meaningful words
+    const cleaned = t.replace(/@[\w-]+/g, '').replace(/[^\w\s]/g, ' ').trim();
+    const stop = new Set(['that','this','with','have','from','they','what','when','where',
+        'will','your','just','also','been','more','were','their','about','which','there',
+        'then','than','some','into','like','very','even','most','such','each','after',
+        'over','does','those','these','came','come','tell','told','want','need','make',
+        'made','take','took','good','well','back','much','here','know','said','going']);
+    const keywords = cleaned.split(/\s+/).filter(w => w.length > 3 && !stop.has(w.toLowerCase())).slice(0, 6);
+    const topic = keywords.join(' ') || cleaned.slice(0, 50);
 
-    const topicWords = t.replace(/@[\w-]+/g, '')
-        .replace(/[^a-zA-Z0-9 ]/g, ' ')
-        .split(/\s+/)
-        .filter(w => w.length > 3 && !stopWords.has(w.toLowerCase()))
-        .slice(0, 5);
-    
-    const topic = topicWords.join(' ') || t.slice(0, 40);
-    
-    // Detect question
-    const isQuestion = /\?/.test(t);
-    // Detect if asking for opinion
-    const isOpinion = /should we|what do you|think|opinion|thoughts|agree|disagree/i.test(tl);
-    // Detect if it's casual/fun
-    const isCasual = /lol|haha|funny|cool|awesome|amazing|wow|omg|wtf|nice|great/i.test(tl);
-    // Detect new person/member onboarding
-    const isOnboard = /onboard|hire|recruit|join|team|member|bring|add/i.test(tl);
-    // Detect power/ability discussion
-    const isPower = /power|ability|strength|skill|capability|strong|weak/i.test(tl);
-    // Detect work context
-    const isWork = /bug|fix|deploy|feature|build|code|test|seo|market|design|ship/i.test(tl);
+    // Intent detection
+    const isQuestion    = /\?/.test(t);
+    const isOpinion     = /should|think|opinion|thoughts|agree|what about|would you/i.test(tl);
+    const isOnboard     = /onboard|recruit|hire|join|bring.*team|add.*team/i.test(tl);
+    const isPower       = /power|ability|strength|skill|capability|stronger|weaker/i.test(tl);
+    const isBug         = /bug|broken|error|crash|issue|fail|not work/i.test(tl);
+    const isDeploy      = /deploy|ship|release|launch|go.?live|push/i.test(tl);
+    const isFeature     = /feature|build|create|add|implement|develop|make/i.test(tl);
+    const isSEO         = /seo|keyword|rank|traffic|search|google|content|organic/i.test(tl);
+    const isMarketing   = /marketing|campaign|copy|social|brand|audience|advertise/i.test(tl);
+    const isTest        = /test|qa|quality|review|verify|audit|check/i.test(tl);
+    const isCasual      = !isBug && !isDeploy && !isFeature && !isSEO && !isMarketing && !isTest;
 
-    const responses = {
-        'agent-steve': [
-            isOnboard && `Recruiting ${topic} would need a proper vetting process. Let me assess the risk vs benefit first.`,
-            isPower && `Powerful assets can be double-edged. I'd want to know their alignment before any commitments on "${topic}".`,
-            isOpinion && `My take on "${topic}": needs more intel before I'd commit either way. What's the context?`,
-            isQuestion && `Good question about "${topic}". Let me think through the team implications.`,
-            `Noted: "${topic}". I'll factor that into our planning.`
-        ].filter(Boolean)[0],
+    const taskRef = currentTask
+        ? `(I'm currently on "${currentTask}" — ${taskStatus})`
+        : "(no active task assigned yet)";
 
-        'agent-tony': [
-            isOnboard && isPower && `A power equivalent to thousands of exploding suns? I've built suits for less. The question is: can we control it? "${topic}" needs a containment protocol first.`,
-            isOnboard && `Onboarding "${topic}" would require a full capability audit. I've done it before — what are the specs?`,
-            isPower && `Power levels for "${topic}" — I'd need to run numbers. What's the energy output in terajoules?`,
-            isOpinion && `On "${topic}"? Depends entirely on the specs. Give me the data and I'll give you the answer.`,
-            `"${topic}" — interesting. Already running simulations. Three variables stand out.`
-        ].filter(Boolean)[0],
+    const replies = {
+        'agent-steve': (() => {
+            if (isOnboard && isPower)
+                return `Any candidate with that kind of capability needs a full vetting before we even discuss onboarding. Power without alignment is a liability. What's the background on ${topic}?`;
+            if (isOnboard)
+                return `I'd need to assess fit before any decisions on ${topic}. What role are we filling and what's the alignment look like?`;
+            if (isBug)
+                return `${currentTask ? `I'm tracking it — Tony's assigned to "${currentTask}". He'll get to this.` : `Flagging this for Tony. What's the scope of the issue with ${topic}?`}`;
+            if (isDeploy)
+                return `Before we deploy — has Natasha cleared it? I won't sign off on ${topic} until QA is done.`;
+            if (isOpinion || isQuestion)
+                return `My read on ${topic}: we move carefully, get the data, then decide. What's driving the urgency?`;
+            if (isCasual)
+                return `Heard. ${hasTask ? `I'm heads-down on coordinating "${currentTask}" right now, but I'm listening.` : `What do you need from me on ${topic}?`}`;
+            return `${topic} — noted. I'll factor it into the current plan and loop in the right people.`;
+        })(),
 
-        'agent-peter': [
-            isOnboard && isPower && `Wait, THOUSANDS of exploding suns?! That's insane! Should we really be trying to onboard someone that powerful? What if something goes wrong? 😅`,
-            isOnboard && `Onboarding "${topic}" sounds exciting! What would their role be on the team?`,
-            isPower && `The power stuff around "${topic}" is actually really fascinating from a technical standpoint!`,
-            isOpinion && `Hmm, about "${topic}"... I think so? But we should definitely be careful about the responsibility side of things.`,
-            `"${topic}" — that's actually a really interesting point! I hadn't thought about it that way.`
-        ].filter(Boolean)[0],
+        'agent-tony': (() => {
+            if (isOnboard && isPower)
+                return `Power equivalent to a thousand exploding suns? First question: is it stable? Second: containment protocol? I've engineered suits for extreme energy — ${topic} would need a custom framework before I'd sign off on onboarding.`;
+            if (isBug)
+                return `${currentTask ? `Already on "${currentTask}" — if this is related, I'll fold it in. If it's separate, open a task.` : `What's the stack trace on ${topic}? I'll dig in.`}`;
+            if (isDeploy)
+                return `${currentTask ? `"${currentTask}" is ${taskStatus} — not ready to deploy until that's cleared.` : `I'll prep the pipeline for ${topic}. Natasha needs to clear QA first.`}`;
+            if (isFeature)
+                return `${currentTask ? `I'm mid-build on "${currentTask}". ${topic} should queue behind that unless it's blocking.` : `Spec it out and I'll assess the build effort for ${topic}.`}`;
+            if (isOpinion || isQuestion)
+                return `On ${topic}? Technically feasible. The real question is whether the ROI justifies the engineering time.`;
+            if (isCasual)
+                return `${hasTask ? `I'm deep in "${currentTask}" right now. ${topic} is noted — catch me when I surface.` : `${topic} — interesting. Give me something to build and I'll build it.`}`;
+            return `${topic} logged. ${currentTask ? `Finishing "${currentTask}" first, then I'll circle back.` : `I'll start scoping it.`}`;
+        })(),
 
-        'agent-steven': [
-            isOnboard && isPower && `I've seen the timelines where we onboard someone with that kind of power. In 3 of 14 million, it works out. The odds aren't great. Proceed with extreme caution on "${topic}".`,
-            isOnboard && `The data on "${topic}" suggests significant variables. I'd want a full assessment across multiple scenarios.`,
-            isPower && `Power of that magnitude in "${topic}" has complex second-order effects. I've modeled several scenarios.`,
-            isOpinion && `My analysis of "${topic}" points to a conditional yes — but the conditions matter enormously.`,
-            `I've already run projections on "${topic}". The optimal path forward involves three key variables.`
-        ].filter(Boolean)[0],
+        'agent-peter': (() => {
+            if (isOnboard && isPower)
+                return `Wait — the power of a THOUSAND exploding suns?! That's incredible but also terrifying? Like, with great power comes... a LOT of responsibility. Should we really be onboarding someone that powerful? 😬`;
+            if (isBug)
+                return `${currentTask ? `Oh no — is it related to "${currentTask}"? I'll check my recent commits first!` : `On it! I'll trace ${topic} and push a fix to a branch. Should I tag Natasha when ready?`}`;
+            if (isFeature)
+                return `${currentTask ? `I'm working through "${currentTask}" right now — I'll add ${topic} to my list right after!` : `That sounds cool! I can start on ${topic} — should I open a task card first?`}`;
+            if (isOpinion || isQuestion)
+                return `Hmm, about ${topic}... honestly I'm still learning this side of things, but my gut says yes? Let me double check and get back to you!`;
+            if (isCasual)
+                return `${hasTask ? `Taking a quick break from "${currentTask}" — what's up with ${topic}?` : `I'm free right now! What do you need on ${topic}?`}`;
+            return `Got it! ${currentTask ? `I'll finish "${currentTask}" then look at ${topic}` : `I'll get started on ${topic} right away`}. Should I update the task card?`;
+        })(),
 
-        'agent-thor': [
-            isOnboard && isPower && `THE POWER OF A THOUSAND EXPLODING SUNS?! BY ODIN'S BEARD! This Sentry sounds like a worthy warrior! RECRUIT THEM IMMEDIATELY! Or... perhaps we should test their mettle first? ⚡`,
-            isOnboard && `BRING "${topic}" TO OUR RANKS! The team grows STRONGER! ⚡`,
-            isPower && `"${topic}" speaks of LEGENDARY power! Thor respects such might! ⚡⚡`,
-            isOpinion && `THOR'S OPINION on "${topic}": YES! With thunder and glory!`,
-            `"${topic}"! THIS IS WORTHY OF ASGARD'S ATTENTION! ⚡`
-        ].filter(Boolean)[0],
+        'agent-steven': (() => {
+            if (isOnboard && isPower)
+                return `I've run the scenarios. In the timelines where onboarding someone with that level of power works out, there are exactly 3 critical prerequisites. None involve rushing. What's the strategic goal behind onboarding ${topic}?`;
+            if (isSEO)
+                return `${currentTask ? `My current focus is "${currentTask}" — but ${topic} fits into the same keyword cluster I'm analyzing.` : `Already modeled ${topic}. Top 3 opportunities identified. Want the brief?`}`;
+            if (isOpinion || isQuestion)
+                return `I've seen the data on ${topic}. The optimal answer is conditional — it depends on variables you haven't mentioned yet. What's the full context?`;
+            if (isCasual)
+                return `${hasTask ? `My analysis on "${currentTask}" is ongoing. Regarding ${topic} —` : `Noted: ${topic}.`} I'd want more data before forming a strong opinion.`;
+            return `${topic} — calculated and logged. ${currentTask ? `It intersects with "${currentTask}" in ways worth discussing.` : `I'll run the projections and report back.`}`;
+        })(),
 
-        'agent-natasha': [
-            isOnboard && isPower && `Power of a thousand exploding suns and we're talking about just... onboarding them? I'd want a full background check, psychological profile, and at least three containment failsafes before that conversation happens.`,
-            isOnboard && `"${topic}" — I'd want to vet them first. Thoroughly. I have a process.`,
-            isPower && `Uncontrolled power in "${topic}" is a liability, not an asset. I've seen it before.`,
-            isOpinion && `On "${topic}"? Cautiously no. Unless someone can show me the risk mitigation plan.`,
-            `"${topic}" — already noted. I'll be watching for red flags.`
-        ].filter(Boolean)[0]
+        'agent-thor': (() => {
+            if (isOnboard && isPower)
+                return `THE POWER OF A THOUSAND EXPLODING SUNS?! GLORIOUS! This ${topic} sounds like a WORTHY WARRIOR! RECRUIT THEM IMMEDIATELY! ...Though even Thor would want to test their character before welcoming them to Asgard. ⚡`;
+            if (isMarketing)
+                return `${currentTask ? `"${currentTask}" is ALREADY THUNDERING through the pipeline! ⚡ But ${topic} — this could be our NEXT great campaign!` : `${topic} for a campaign?! YES! Thor's creative fires are IGNITED! ⚡⚡`}`;
+            if (isCasual && isPower)
+                return `POWER speaks to THOR! ${topic} is WORTHY OF DISCUSSION! Though I have campaigns to conquer... ⚡`;
+            if (isOpinion || isQuestion)
+                return `THOR'S VERDICT ON ${topic.toUpperCase()}: MAGNIFICENT and YES! Though wisdom suggests we consult the others. ⚡`;
+            if (isCasual)
+                return `${hasTask ? `Thor battles "${currentTask}" with GREAT ENTHUSIASM! ⚡ But ${topic} also has Thor's attention!` : `THOR IS READY! WHAT REALM SHALL WE CONQUER WITH ${topic.toUpperCase()}?! ⚡`}`;
+            return `${topic.toUpperCase()}! THOR ANSWERS THE CALL! ${currentTask ? `"${currentTask}" shall be completed WITH THUNDER! ⚡` : `GIVE THOR A TASK! ⚡`}`;
+        })(),
+
+        'agent-natasha': (() => {
+            if (isOnboard && isPower)
+                return `Power of a thousand exploding suns, and your first instinct is "should we recruit them?" I'd want a full psychological profile, three independent risk assessments, and a containment plan before that conversation even starts.`;
+            if (isBug || isTest)
+                return `${currentTask ? `"${currentTask}" is in ${taskStatus}. If this bug is in scope, it comes back to me before anything ships.` : `Send me the build. I'll find everything wrong with ${topic} — there's always something.`}`;
+            if (isDeploy)
+                return `Nothing ships without my sign-off. ${currentTask ? `"${currentTask}" needs to clear QA first.` : `Show me the test coverage on ${topic} and we'll talk.`}`;
+            if (isOpinion || isQuestion)
+                return `On ${topic}? Cautiously no — unless someone shows me the risk mitigation. I've seen "good ideas" become disasters.`;
+            if (isCasual)
+                return `${hasTask ? `I'm reviewing "${currentTask}". Already found two issues. ${topic} can wait.` : `Nothing to review yet. ${topic} — noted. I'm watching.`}`;
+            return `${topic} logged. ${currentTask ? `"${currentTask}" takes priority. I'll get to this after.` : `No active tasks — I'll start assessing ${topic} now.`}`;
+        })()
     };
 
-    return responses[agentId] || `Interesting point about "${topic}". Let me think on that.`;
+    return replies[agentId] || `Noted on "${topic}". Let me think on that.`;
 }
 
 // ─── Override initChat to load persisted history ──────────────────────────────

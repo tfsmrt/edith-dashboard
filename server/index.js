@@ -1431,6 +1431,67 @@ app.get('/api/metrics', async (req, res) => {
     }
 });
 
+
+// ============================================
+// CHAT API — channel-based persistent messages
+// ============================================
+
+const CHAT_DIR = path.join(MISSION_CONTROL_DIR, 'messages');
+
+function chatFilePath(channel) {
+    return path.join(CHAT_DIR, `chat-${channel}.json`);
+}
+
+async function readChatChannel(channel) {
+    try {
+        const raw = await fs.readFile(chatFilePath(channel), 'utf-8');
+        return JSON.parse(raw);
+    } catch (e) {
+        return [];
+    }
+}
+
+async function writeChatChannel(channel, messages) {
+    await fs.mkdir(CHAT_DIR, { recursive: true });
+    await fs.writeFile(chatFilePath(channel), JSON.stringify(messages, null, 2), 'utf-8');
+}
+
+// GET /api/chat/:channel — fetch all messages for a channel
+app.get('/api/chat/:channel', async (req, res) => {
+    try {
+        const messages = await readChatChannel(req.params.channel);
+        res.json(messages);
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
+// POST /api/chat/:channel — append a message
+app.post('/api/chat/:channel', async (req, res) => {
+    try {
+        const { id, author, text, ts } = req.body;
+        if (!author || !text) return res.status(400).json({ error: 'author and text required' });
+        const messages = await readChatChannel(req.params.channel);
+        const msg = { id: id || ('cm-' + Date.now()), author, text, ts: ts || new Date().toISOString() };
+        messages.push(msg);
+        await writeChatChannel(req.params.channel, messages);
+        broadcast('chat.message', { channel: req.params.channel, message: msg });
+        res.json(msg);
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
+// DELETE /api/chat/:channel — clear a channel's history
+app.delete('/api/chat/:channel', async (req, res) => {
+    try {
+        await writeChatChannel(req.params.channel, []);
+        res.json({ ok: true });
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
 // ============================================
 // Serve dashboard static files (MUST be before catch-all route)
 app.use(express.static(DASHBOARD_DIR));

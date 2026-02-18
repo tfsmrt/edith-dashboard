@@ -490,7 +490,7 @@ function sendChatMsg() {
     };
     msgs.push(newMsg);
     window.chatMessages[activeChatChannel] = msgs;
-    saveChatHistory();
+    saveChatHistory(activeChatChannel, newMsg);
 
     input.value = '';
     hideMentionDropdown();
@@ -533,34 +533,67 @@ function scheduleReply(agentId, delayMs, triggerText) {
             ts: new Date().toISOString()
         });
         window.chatMessages[activeChatChannel] = msgs;
-        saveChatHistory();
+        saveChatHistory(activeChatChannel, { id: 'cm-auto-' + Date.now() + '-' + agentId, author: agentId, text: reply, ts: new Date().toISOString() });
         renderMessages(activeChatChannel);
         scrollToBottom();
     }, delayMs);
 }
 
-// ─── Chat Persistence (localStorage) ─────────────────────────────────────────
+// ─── Chat Persistence — Server API (falls back to localStorage) ───────────────
 
-const CHAT_STORAGE_KEY = 'edith-chat-v1';
+const CHAT_API_BASE = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+    ? '' : null; // null = static mode, use localStorage
 
-function saveChatHistory() {
-    try {
-        localStorage.setItem(CHAT_STORAGE_KEY, JSON.stringify(window.chatMessages));
-    } catch(e) { console.warn('Chat save failed', e); }
+async function serverAvailable() {
+    return CHAT_API_BASE !== null;
 }
 
-function loadChatHistory() {
+async function saveChatHistory(channel, message) {
+    if (await serverAvailable()) {
+        try {
+            await fetch(`/api/chat/${channel}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(message)
+            });
+            return;
+        } catch(e) { console.warn('Server save failed, using localStorage', e); }
+    }
+    // Fallback: localStorage
     try {
+        const CHAT_STORAGE_KEY = 'edith-chat-v1';
+        localStorage.setItem(CHAT_STORAGE_KEY, JSON.stringify(window.chatMessages));
+    } catch(e) { console.warn('localStorage save failed', e); }
+}
+
+async function loadChatHistory() {
+    if (await serverAvailable()) {
+        try {
+            const channels = (window.chatChannels || []).map(c => c.id);
+            for (const ch of channels) {
+                const res = await fetch(`/api/chat/${ch}`);
+                if (res.ok) {
+                    const msgs = await res.json();
+                    if (msgs && msgs.length > 0) {
+                        window.chatMessages[ch] = msgs;
+                    }
+                }
+            }
+            return true;
+        } catch(e) { console.warn('Server load failed, using localStorage', e); }
+    }
+    // Fallback: localStorage
+    try {
+        const CHAT_STORAGE_KEY = 'edith-chat-v1';
         const saved = localStorage.getItem(CHAT_STORAGE_KEY);
         if (saved) {
             const parsed = JSON.parse(saved);
-            // Merge: keep default channel seeds, but overlay saved messages
             Object.keys(parsed).forEach(ch => {
                 window.chatMessages[ch] = parsed[ch];
             });
             return true;
         }
-    } catch(e) { console.warn('Chat load failed', e); }
+    } catch(e) { console.warn('localStorage load failed', e); }
     return false;
 }
 
@@ -635,10 +668,9 @@ function buildContextualReply(agentId, triggerText) {
 
 // ─── Override initChat to load persisted history ──────────────────────────────
 
-const _baseInitChat = initChat;
-function initChat() {
+async function initChat() {
     buildMemberList();
-    loadChatHistory(); // load before rendering
+    await loadChatHistory(); // load persisted messages before rendering
     renderChannelList();
     switchChannel('general');
     renderMembersPanel();

@@ -1,2 +1,2 @@
-# Proxy all /api/* requests to the Cloudflare Worker (same-origin, no CORS needed)
-/api/* https://edith-api.tfsmrt.workers.dev/api/:splat 200
+# SPA fallback — all non-asset routes serve index.html
+/*  /index.html  200

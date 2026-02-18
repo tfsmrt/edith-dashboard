@@ -54,7 +54,7 @@ function renderChannelList() {
     scroll.innerHTML = html;
 }
 
-function switchChannel(channelId) {
+function switchChannel(channelId, pushState = true) {
     activeChatChannel = channelId;
     renderChannelList();
 
@@ -67,6 +67,15 @@ function switchChannel(channelId) {
     if (nameEl) nameEl.textContent = ch.name;
     if (topicEl) topicEl.textContent = ch.topic;
     if (inputEl) inputEl.placeholder = `Message #${ch.name}`;
+
+    // Update URL without reload
+    if (pushState) {
+        const newUrl = `/chat/${channelId}`;
+        if (window.location.pathname !== newUrl) {
+            history.pushState({ channel: channelId }, `#${ch.name} — E.D.I.T.H`, newUrl);
+        }
+    }
+    document.title = `#${ch.name} — E.D.I.T.H Dashboard`;
 
     renderMessages(channelId);
     scrollToBottom();
@@ -341,20 +350,32 @@ function showBoardView() {
     document.getElementById('view-btn-board').classList.add('active');
     document.getElementById('view-btn-chat').classList.remove('active');
 
+    // Reset URL to root when going back to board
+    if (window.location.pathname.startsWith('/chat')) {
+        history.pushState({}, 'E.D.I.T.H Dashboard', '/');
+        document.title = 'E.D.I.T.H Dashboard';
+    }
+
     // Force reflow so height is recalculated correctly
     wrapper.offsetHeight;
     window.dispatchEvent(new Event('resize'));
 }
 
-function showChatView() {
+function showChatView(channelId) {
     document.getElementById('kanban-board-wrapper').style.display = 'none';
     document.getElementById('chat-view').classList.add('active');
     document.getElementById('left-sidebar').style.display = 'none';
     document.getElementById('right-sidebar').style.display = 'none';
     document.getElementById('view-btn-board').classList.remove('active');
     document.getElementById('view-btn-chat').classList.add('active');
-    if (allMembers.length === 0) initChat();
-    else scrollToBottom();
+    if (allMembers.length === 0) {
+        initChat().then(() => {
+            if (channelId) switchChannel(channelId);
+        });
+    } else {
+        if (channelId) switchChannel(channelId);
+        else scrollToBottom();
+    }
 }
 
 // ─── @everyone + Auto-Reply System ───────────────────────────────────────────
@@ -764,4 +785,36 @@ async function initChat() {
     renderChannelList();
     switchChannel('general');
     renderMembersPanel();
+}
+
+// ─── URL Router ───────────────────────────────────────────────────────────────
+
+function initRouter() {
+    const path = window.location.pathname;
+    const chatMatch = path.match(/^\/chat\/?([\w-]*)$/);
+
+    if (chatMatch) {
+        const channelId = chatMatch[1] || 'general';
+        // Auto-open chat view on the right channel
+        setTimeout(() => showChatView(channelId), 100);
+    }
+
+    // Handle browser back/forward
+    window.addEventListener('popstate', (e) => {
+        const p = window.location.pathname;
+        const m = p.match(/^\/chat\/?([\w-]*)$/);
+        if (m) {
+            const ch = m[1] || 'general';
+            showChatView(ch);
+        } else {
+            showBoardView();
+        }
+    });
+}
+
+// Run router after page init
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initRouter);
+} else {
+    setTimeout(initRouter, 200);
 }

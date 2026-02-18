@@ -1541,6 +1541,81 @@ Rules:
     }
 });
 
+
+// POST /api/tasks/execute — trigger agent to work on a task via OpenClaw
+app.post('/api/tasks/execute', async (req, res) => {
+    try {
+        const { taskId } = req.body;
+        if (!taskId) return res.status(400).json({ error: 'taskId required' });
+
+        // Load the task
+        const taskPath = path.join(MISSION_CONTROL_DIR, 'tasks', `${taskId}.json`);
+        let task;
+        try {
+            task = JSON.parse(await fs.readFile(taskPath, 'utf-8'));
+        } catch(e) {
+            return res.status(404).json({ error: 'Task not found' });
+        }
+
+        if (!task.assignee) return res.json({ ok: true, message: 'No assignee' });
+
+        // Update task to IN_PROGRESS
+        task.status = 'IN_PROGRESS';
+        task.updated_at = new Date().toISOString();
+        task.comments = task.comments || [];
+        task.comments.push({
+            id: `comment-${Date.now()}`,
+            author: task.assignee,
+            content: `Picked up task. Starting work on: ${task.title}`,
+            timestamp: new Date().toISOString(),
+            type: 'progress'
+        });
+        await fs.writeFile(taskPath, JSON.stringify(task, null, 2), 'utf-8');
+
+        // Call OpenClaw gateway to spawn a sub-agent
+        const OPENCLAW_GATEWAY = 'http://localhost:18789';
+        const gatewayConfigPath = '/root/.openclaw/openclaw.json';
+        let gatewayToken = '';
+        try {
+            const cfg = JSON.parse(require('fs').readFileSync(gatewayConfigPath, 'utf-8'));
+            gatewayToken = cfg.gateway?.auth?.token || '';
+        } catch(e) {}
+
+        if (gatewayToken) {
+            const agentPrompts = {
+                'agent-tony':    `You are Tony Stark, Senior Developer. You have been assigned a task: "${task.title}". Description: ${task.description}. Priority: ${task.priority}. Review the task, create a technical plan, and update the task file at ${taskPath} by adding your detailed approach as a comment. Set status to IN_PROGRESS. Be specific and technical.`,
+                'agent-peter':   `You are Peter Parker, Junior Developer. You have been assigned a task: "${task.title}". Description: ${task.description}. Review the task, ask clarifying questions if needed, outline your approach, and update the task file at ${taskPath} with a comment about your plan. Set status to IN_PROGRESS.`,
+                'agent-steven':  `You are Steven Strange, SEO Analyst. You have been assigned a task: "${task.title}". Description: ${task.description}. Analyze the requirements, outline your SEO/content strategy, and update the task file at ${taskPath} with your detailed plan. Set status to IN_PROGRESS.`,
+                'agent-thor':    `You are Thor Odinson, Marketing Lead. You have been assigned a task: "${task.title}". Description: ${task.description}. Create a bold marketing plan for this task, and update the task file at ${taskPath} with your strategy. Set status to IN_PROGRESS.`,
+                'agent-natasha': `You are Natasha Romanoff, QA Lead. You have been assigned a task: "${task.title}". Description: ${task.description}. Create a comprehensive QA/testing plan, identify potential issues, and update the task file at ${taskPath} with your testing strategy. Set status to IN_PROGRESS.`,
+                'agent-steve':   `You are Steve Rogers, CEO Lead Agent. You have been assigned a task: "${task.title}". Description: ${task.description}. Coordinate the appropriate team members, create an action plan, and update the task file at ${taskPath} with your coordination plan. Set status to IN_PROGRESS.`
+            };
+
+            const prompt = agentPrompts[task.assignee];
+            if (prompt) {
+                fetch(`${OPENCLAW_GATEWAY}/api/sessions/spawn`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${gatewayToken}`
+                    },
+                    body: JSON.stringify({
+                        task: prompt + `\n\nAfter updating the task file, also:\n1. Add a comment from ${task.assignee} in the file\n2. Run: cd /root/.openclaw/workspace/missiondeck/Asif2BD-JARVIS-Mission-Control-OpenClaw-9030d67ed37812caea77597ee88aee679247dfbe && git add -A && git commit -m "[${task.assignee}] Working on: ${task.title}" && git push origin main`,
+                        label: `task-${taskId}`,
+                        runTimeoutSeconds: 300
+                    })
+                }).catch(e => console.log('Gateway spawn failed:', e.message));
+            }
+        }
+
+        broadcast('task.updated', task);
+        res.json({ ok: true, task });
+    } catch(e) {
+        console.error('Execute error:', e);
+        res.status(500).json({ error: e.message });
+    }
+});
+
 // ============================================
 // CHAT API — channel-based persistent messages
 // ============================================

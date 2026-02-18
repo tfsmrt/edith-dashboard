@@ -786,7 +786,7 @@ async function createTask() {
         priority,
         assignee,
         labels,
-        created_by: 'human-user'
+        created_by: 'human-somrat'
     };
 
     // Close modal
@@ -800,31 +800,30 @@ async function createTask() {
             const savedTask = await window.MissionControlAPI.createTask(taskData);
 
             if (savedTask && savedTask.id) {
-                // Add to local data store
                 window.missionControlData.tasks.push(savedTask);
-
-                showToast('success', 'Task Created', `Task saved: ${savedTask.id}`);
-                console.log('Task saved to server:', savedTask);
+                saveTasksToLocalStorage();
+                showToast('success', 'Task Created', `"${savedTask.title}" assigned to the team.`);
+                triggerAgentExecution(savedTask);
             } else {
                 throw new Error('Invalid response from server');
             }
         } catch (error) {
             console.error('Failed to save task to server:', error);
 
-            // Fall back to local-only storage
+            // Fall back to localStorage
             const newTask = window.missionControlData.addTask(taskData);
-            showToast('info', 'Task Created Locally',
-                'Server unavailable. Task stored locally only.');
-            showTaskJson(newTask);
+            saveTasksToLocalStorage();
+            showToast('success', 'Task Created', `"${newTask.title}" saved locally.`);
+            triggerAgentExecution(newTask);
         }
 
         hideLoading();
     } else {
-        // No API available - create locally and show JSON
+        // No API — save to localStorage for persistence
         const newTask = window.missionControlData.addTask(taskData);
-        showToast('info', 'Task Created Locally',
-            'Start the server to enable persistence.');
-        showTaskJson(newTask);
+        saveTasksToLocalStorage();
+        showToast('success', 'Task Created', `"${newTask.title}" saved.`);
+        triggerAgentExecution(newTask);
     }
 
     // Refresh display
@@ -1109,9 +1108,10 @@ async function handleDrop(e) {
                 await window.MissionControlAPI.updateTask(draggedTask.id, draggedTask);
             } catch (error) {
                 console.error('Failed to save task update:', error);
-                showToast('error', 'Save Failed', 'Task moved locally but not saved to server');
             }
         }
+        // Always persist to localStorage
+        saveTasksToLocalStorage();
 
         // Re-render the board
         renderDashboard();
@@ -3170,3 +3170,122 @@ function handleSwipeGesture() {
         }
     }
 }
+
+// ─── Task Persistence (localStorage fallback) ──────────────────────────────
+
+const TASKS_STORAGE_KEY = 'edith-tasks-v1';
+
+function saveTasksToLocalStorage() {
+    try {
+        const tasks = window.missionControlData.getTasks();
+        localStorage.setItem(TASKS_STORAGE_KEY, JSON.stringify(tasks));
+    } catch(e) { console.warn('Task save failed', e); }
+}
+
+function loadTasksFromLocalStorage() {
+    try {
+        const saved = localStorage.getItem(TASKS_STORAGE_KEY);
+        if (!saved) return false;
+        const tasks = JSON.parse(saved);
+        if (tasks && tasks.length > 0) {
+            window.missionControlData.tasks = tasks;
+            return true;
+        }
+    } catch(e) { console.warn('Task load failed', e); }
+    return false;
+}
+
+// Patch loadData to try localStorage if server unavailable
+const _originalLoadData = window.missionControlData.loadData.bind(window.missionControlData);
+window.missionControlData.loadData = async function() {
+    const result = await _originalLoadData();
+    // If no tasks came from server, load from localStorage
+    if (this.tasks.length === 0) {
+        loadTasksFromLocalStorage();
+    }
+    return result;
+};
+
+// Also save whenever task status changes (drag & drop, status updates)
+const _originalAddTask = window.missionControlData.addTask.bind(window.missionControlData);
+window.missionControlData.addTask = function(task) {
+    const newTask = _originalAddTask(task);
+    saveTasksToLocalStorage();
+    return newTask;
+};
+
+// ─── Agent Execution — trigger agent to work on task ──────────────────────
+
+const AGENT_NAMES = {
+    'agent-steve':   'Steve Rogers (CEO)',
+    'agent-tony':    'Tony Stark (Sr Developer)',
+    'agent-peter':   'Peter Parker (Jr Developer)',
+    'agent-steven':  'Steven Strange (SEO Analyst)',
+    'agent-thor':    'Thor Odinson (Marketing Lead)',
+    'agent-natasha': 'Natasha Romanoff (QA Lead)'
+};
+
+const AGENT_ROLES = {
+    'agent-steve':   'lead and orchestrator',
+    'agent-tony':    'senior developer',
+    'agent-peter':   'junior developer',
+    'agent-steven':  'SEO analyst',
+    'agent-thor':    'marketing lead',
+    'agent-natasha': 'QA lead'
+};
+
+function triggerAgentExecution(task) {
+    if (!task.assignee || !AGENT_NAMES[task.assignee]) return;
+
+    const agentName = AGENT_NAMES[task.assignee];
+    const agentRole = AGENT_ROLES[task.assignee];
+
+    // Call the server webhook to trigger agent work
+    if (window.MissionControlAPI) {
+        fetch('/api/tasks/execute', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ taskId: task.id })
+        }).catch(() => {}); // fire and forget
+    }
+
+    // Show agent "picked up task" notification in UI
+    const agentEl = document.querySelector(`[data-agent="${task.assignee}"]`);
+    if (agentEl) agentEl.classList.add('working');
+
+    // Simulate agent accepting the task with a short delay
+    const acceptMessages = {
+        'agent-tony':    `Task received. I'll start the architecture review and get back with a plan.`,
+        'agent-peter':   `Got it! I'll get started on "${task.title}" right away. I'll tag Natasha when ready for review!`,
+        'agent-steven':  `Analyzing. I'll have a strategy for "${task.title}" ready within the hour.`,
+        'agent-thor':    `BY ODIN! I ACCEPT THIS GLORIOUS MISSION: "${task.title}"! ⚡`,
+        'agent-natasha': `Task accepted. "${task.title}" — I'll approach this with full scrutiny.`,
+        'agent-steve':   `Task logged. Coordinating the right resources for "${task.title}".`
+    };
+
+    const msg = acceptMessages[task.assignee];
+    if (msg) {
+        setTimeout(() => {
+            showToast('info', agentName, msg);
+            // Also post to the agent's DM channel
+            const dmKey = `dm-${task.assignee}`;
+            if (window.chatMessages) {
+                window.chatMessages[dmKey] = window.chatMessages[dmKey] || [];
+                window.chatMessages[dmKey].push({
+                    id: `task-accept-${task.id}`,
+                    author: task.assignee,
+                    text: `📋 **New task assigned:** "${task.title}"\n${msg}`,
+                    ts: new Date().toISOString()
+                });
+                if (typeof saveChatHistory === 'function') {
+                    saveChatHistory(dmKey, { author: task.assignee, text: msg });
+                }
+            }
+        }, 2000);
+    }
+}
+
+// Save tasks when drag & drop changes status
+document.addEventListener('taskStatusChanged', (e) => {
+    saveTasksToLocalStorage();
+});

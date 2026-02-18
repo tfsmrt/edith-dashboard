@@ -490,6 +490,7 @@ function sendChatMsg() {
     };
     msgs.push(newMsg);
     window.chatMessages[activeChatChannel] = msgs;
+    saveChatHistory();
 
     input.value = '';
     hideMentionDropdown();
@@ -507,7 +508,7 @@ function triggerAutoReplies(text) {
     if (text.includes('@everyone')) {
         agentIds.forEach((agentId, i) => {
             const delay = 1500 + i * 1800 + Math.random() * 1000;
-            scheduleReply(agentId, delay);
+            scheduleReply(agentId, delay, text);
         });
         return;
     }
@@ -516,15 +517,14 @@ function triggerAutoReplies(text) {
     const mentioned = agentIds.filter(id => text.includes('@' + id));
     mentioned.forEach((agentId, i) => {
         const delay = 1500 + i * 1200 + Math.random() * 1500;
-        scheduleReply(agentId, delay);
+        scheduleReply(agentId, delay, text);
     });
 }
 
-function scheduleReply(agentId, delayMs) {
+function scheduleReply(agentId, delayMs, triggerText) {
     setTimeout(() => {
-        const replies = AGENT_REPLIES[agentId];
-        if (!replies) return;
-        const reply = replies[Math.floor(Math.random() * replies.length)];
+        const reply = buildContextualReply(agentId, triggerText);
+        if (!reply) return;
         const msgs = window.chatMessages[activeChatChannel] || [];
         msgs.push({
             id: 'cm-auto-' + Date.now() + '-' + agentId,
@@ -533,7 +533,113 @@ function scheduleReply(agentId, delayMs) {
             ts: new Date().toISOString()
         });
         window.chatMessages[activeChatChannel] = msgs;
+        saveChatHistory();
         renderMessages(activeChatChannel);
         scrollToBottom();
     }, delayMs);
+}
+
+// ─── Chat Persistence (localStorage) ─────────────────────────────────────────
+
+const CHAT_STORAGE_KEY = 'edith-chat-v1';
+
+function saveChatHistory() {
+    try {
+        localStorage.setItem(CHAT_STORAGE_KEY, JSON.stringify(window.chatMessages));
+    } catch(e) { console.warn('Chat save failed', e); }
+}
+
+function loadChatHistory() {
+    try {
+        const saved = localStorage.getItem(CHAT_STORAGE_KEY);
+        if (saved) {
+            const parsed = JSON.parse(saved);
+            // Merge: keep default channel seeds, but overlay saved messages
+            Object.keys(parsed).forEach(ch => {
+                window.chatMessages[ch] = parsed[ch];
+            });
+            return true;
+        }
+    } catch(e) { console.warn('Chat load failed', e); }
+    return false;
+}
+
+// ─── Contextual Replies ───────────────────────────────────────────────────────
+
+function buildContextualReply(agentId, triggerText) {
+    const t = (triggerText || '').toLowerCase();
+
+    // Extract a short quoted snippet from the message for context
+    const words = triggerText.replace(/@[\w-]+/g, '').trim();
+    const snippet = words.length > 60 ? words.slice(0, 57) + '...' : words;
+
+    // Keyword detection
+    const isBug      = /bug|fix|broken|error|crash|issue|problem|fail/i.test(t);
+    const isDeploy   = /deploy|push|ship|release|launch|go.live/i.test(t);
+    const isDesign   = /design|ui|ux|look|style|layout|color|theme/i.test(t);
+    const isFeature  = /feature|build|add|create|implement|develop|make/i.test(t);
+    const isSEO      = /seo|keyword|rank|traffic|search|google|content/i.test(t);
+    const isMarketing = /marketing|campaign|copy|social|brand|audience|ad/i.test(t);
+    const isQA       = /test|qa|quality|review|check|verify|audit/i.test(t);
+    const isQuestion = /\?/.test(t);
+    const isEveryone = /everyone/i.test(t);
+    const isMeeting  = /meet|sync|standup|call|discuss/i.test(t);
+
+    const replies = {
+        'agent-steve': (() => {
+            if (isMeeting) return `Copy. I'll coordinate the team. When do you need us?`;
+            if (isDeploy) return `Coordinating deployment. @agent-tony, @agent-natasha — you two good to sign off?`;
+            if (isEveryone) return `Team, you heard Somrat. Everyone acknowledge and align on your tasks.`;
+            if (isQuestion) return `Good question. Let me assess and get back to you with a plan.`;
+            return `Understood. I'll make sure the team is aligned on this: "${snippet}"`;
+        })(),
+        'agent-tony': (() => {
+            if (isBug) return `Already isolated the issue. "${snippet}" — I've seen this pattern before. Fix incoming.`;
+            if (isDeploy) return `Deployment checklist is ready. I'll run the pipeline once Natasha clears QA.`;
+            if (isFeature) return `Feature scope noted: "${snippet}". I'll draft the architecture. Peter, stand by.`;
+            if (isDesign) return `I'll handle the tech side. For the visuals, we should loop in the right person.`;
+            if (isQuestion) return `Short answer: yes. Long answer involves three whiteboards. Want the short version?`;
+            return `On it. "${snippet}" — already thinking through the approach. Give me some time.`;
+        })(),
+        'agent-peter': (() => {
+            if (isBug) return `On it! I'll trace the bug for "${snippet}" and push a fix to a branch for review.`;
+            if (isFeature) return `Sounds exciting! I'll start on "${snippet}" — should I open a task on the board?`;
+            if (isDesign) return `I can help with the frontend for "${snippet}"! Looping in for UI work.`;
+            if (isQuestion) return `Hmm, I think so? Let me double-check and get back to you quickly!`;
+            return `Got it! Working on "${snippet}" now. I'll update the task card when there's progress.`;
+        })(),
+        'agent-steven': (() => {
+            if (isSEO) return `I've already modeled this. "${snippet}" — top 3 keyword opportunities identified. Brief incoming.`;
+            if (isMarketing) return `From an SEO angle, "${snippet}" needs keyword alignment before any campaign launches.`;
+            if (isQuestion) return `I've calculated the optimal answer. The data points to yes — with caveats.`;
+            return `Noted: "${snippet}". I'll run the analysis and cross-reference with search trends. Give me 24h.`;
+        })(),
+        'agent-thor': (() => {
+            if (isMarketing) return `YES! "${snippet}" — THIS IS THE CAMPAIGN WE'VE BEEN WAITING FOR! The thunder BEGINS! ⚡`;
+            if (isDeploy) return `LAUNCH DAY APPROACHES! Thor shall ensure the realm of marketing is READY! ⚡`;
+            if (isEveryone) return `THOR HEARS THE CALL! I am READY, WILLING, and EXTREMELY ENTHUSIASTIC! ⚡⚡`;
+            if (isQuestion) return `THOR DOES NOT KNOW... but THOR WILL FIND OUT with the FURY OF A THOUSAND CAMPAIGNS!`;
+            return `"${snippet}" — BY MJOLNIR, this is a worthy challenge! Thor is ON IT! ⚡`;
+        })(),
+        'agent-natasha': (() => {
+            if (isQA || isBug) return `Already on it. "${snippet}" — I found 2 related issues while you were typing. Report coming.`;
+            if (isDeploy) return `Not until I've cleared it. Send me the build for "${snippet}" and I'll run the full sweep.`;
+            if (isFeature) return `Tag me when it's ready for review. "${snippet}" will need thorough testing.`;
+            if (isQuestion) return `Yes. And you should be worried about the edge cases. I already am.`;
+            return `Logged: "${snippet}". I'll keep an eye on it. Nothing slips past QA.`;
+        })()
+    };
+
+    return replies[agentId] || null;
+}
+
+// ─── Override initChat to load persisted history ──────────────────────────────
+
+const _baseInitChat = initChat;
+function initChat() {
+    buildMemberList();
+    loadChatHistory(); // load before rendering
+    renderChannelList();
+    switchChannel('general');
+    renderMembersPanel();
 }

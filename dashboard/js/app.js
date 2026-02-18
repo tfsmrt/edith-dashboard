@@ -80,7 +80,7 @@ async function checkServerConnection() {
 
     statusDot.classList.remove('online');
     statusDot.classList.add('offline');
-    statusText.textContent = 'Offline - Using sample data';
+    statusText.textContent = 'E.D.I.T.H Mode';
     return false;
 }
 

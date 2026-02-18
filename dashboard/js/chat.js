@@ -138,8 +138,9 @@ function renderMessages(channelId) {
 function formatChatText(text) {
     // Bold: **text**
     text = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-    // Mentions: @agent-tony → styled span
+    // Mentions: @everyone or @agent-id → styled span
     text = text.replace(/@([\w-]+)/g, (match, id) => {
+        if (id === 'everyone') return '<span class="chat-mention" style="background:hsl(var(--destructive)/0.15);color:hsl(var(--destructive))">@everyone</span>';
         const member = allMembers.find(m => m.id === id);
         const displayName = member ? '@' + member.name.split(' ')[0] : match;
         return `<span class="chat-mention">${displayName}</span>`;
@@ -341,4 +342,185 @@ function showChatView() {
     document.getElementById('view-btn-chat').classList.add('active');
     if (allMembers.length === 0) initChat();
     else scrollToBottom();
+}
+
+// ─── @everyone + Auto-Reply System ───────────────────────────────────────────
+
+const AGENT_REPLIES = {
+    'agent-steve': [
+        "Copy that. I'm on it.",
+        "Understood. Coordinating the team now.",
+        "Roger. What's the priority level?",
+        "On it, Cap's always ready.",
+        "Already ahead of you. What do you need?",
+        "Team's assembled. What's the mission?"
+    ],
+    'agent-tony': [
+        "Already running the analysis. Give me 3 minutes.",
+        "I've seen worse problems. This is fixable.",
+        "JARVIS flagged this earlier. I've got a solution in progress.",
+        "On it. Estimated completion: 47 minutes. Maybe less.",
+        "You're talking to the right person. What's the spec?",
+        "I don't do impossible. I do 'hasn't been done yet'."
+    ],
+    'agent-peter': [
+        "On it! I'll get started right away! 🙌",
+        "Yes! With great responsibility and all that — what do you need?",
+        "I'm on it. Should I loop in Tony for review when done?",
+        "Copy! I'll have a draft ready soon.",
+        "Got it! This is actually a really interesting problem...",
+        "Sure! I'll push to a branch and tag Natasha for QA."
+    ],
+    'agent-steven': [
+        "I've already calculated the optimal approach. Proceed as follows...",
+        "I've seen this exact scenario in 3 of the 14 million futures that work. I'll handle it.",
+        "Analyzing. Give me a moment to consult the data.",
+        "The SEO implications here are significant. I'll brief you.",
+        "Time is a factor. I've already started.",
+        "Understood. I'll need keyword data and 48 hours."
+    ],
+    'agent-thor': [
+        "BY ODIN'S BEARD, I shall handle this with THUNDER and GLORY! ⚡",
+        "Thor answers the call! What campaign shall we unleash upon the realm?",
+        "I have been WAITING for this moment. The campaign begins NOW.",
+        "Consider it done. No challenge is too great for the God of Marketing!",
+        "Excellent! I shall craft copy so powerful it will shake the very Bifrost!",
+        "BRING IT. Thor is ready. Always ready. EVER READY. ⚡⚡"
+    ],
+    'agent-natasha': [
+        "Already on it. Found 2 issues before you even asked.",
+        "I was wondering when you'd notice. I've been tracking this.",
+        "Understood. I'll run a full sweep.",
+        "Give me the build. I'll break it properly.",
+        "Nothing gets past me. I'll have a report within the hour.",
+        "I'll handle QA. Just make sure the code is actually ready this time."
+    ]
+};
+
+const EVERYONE_INTROS = [
+    "heads up team 👋",
+    "everyone listen up:",
+    "all agents:",
+    "team meeting:",
+    "attention all:"
+];
+
+// Extend allMembers with @everyone pseudo-member
+function getCompletionMembers() {
+    return [
+        { id: 'everyone', name: 'everyone', designation: 'Notify all members', kind: 'special' },
+        ...allMembers
+    ];
+}
+
+// Override mention autocomplete to include @everyone
+const _originalShowMention = showMentionDropdown;
+function showMentionDropdown() {
+    mentionIndex = 0;
+    renderMentionDropdown();
+    const dropdown = document.getElementById('mention-dropdown');
+    if (dropdown) dropdown.classList.add('visible');
+}
+
+// Override onChatInput to use extended member list
+const _originalOnChatInput = onChatInput;
+function onChatInput(e) {
+    const input = e.target;
+    const val = input.value;
+    const cursor = input.selectionStart;
+    const before = val.slice(0, cursor);
+    const mentionMatch = before.match(/@([\w-]*)$/);
+
+    if (mentionMatch) {
+        const query = mentionMatch[1].toLowerCase();
+        mentionMatches = getCompletionMembers().filter(m =>
+            m.name.toLowerCase().includes(query) ||
+            m.id.toLowerCase().includes(query)
+        ).slice(0, 7);
+        if (mentionMatches.length) {
+            showMentionDropdown();
+        } else {
+            hideMentionDropdown();
+        }
+    } else {
+        hideMentionDropdown();
+    }
+
+    if (e.key === 'Enter' && !e.shiftKey) {
+        const dropdown = document.getElementById('mention-dropdown');
+        if (dropdown && dropdown.classList.contains('visible') && mentionIndex >= 0) {
+            selectMention(mentionIndex);
+        } else {
+            sendChatMsg();
+        }
+        e.preventDefault();
+    }
+    if (e.key === 'ArrowUp') { mentionIndex = Math.max(0, mentionIndex - 1); renderMentionDropdown(); e.preventDefault(); }
+    if (e.key === 'ArrowDown') { mentionIndex = Math.min(mentionMatches.length - 1, mentionIndex + 1); renderMentionDropdown(); e.preventDefault(); }
+    if (e.key === 'Escape') { hideMentionDropdown(); }
+}
+
+// Override sendChatMsg to trigger auto-replies
+const _originalSend = sendChatMsg;
+function sendChatMsg() {
+    const input = document.getElementById('chat-message-input');
+    if (!input) return;
+    const text = input.value.trim();
+    if (!text) return;
+
+    const msgs = window.chatMessages[activeChatChannel] || [];
+    const newMsg = {
+        id: 'cm-' + Date.now(),
+        author: 'human-somrat',
+        text: text,
+        ts: new Date().toISOString()
+    };
+    msgs.push(newMsg);
+    window.chatMessages[activeChatChannel] = msgs;
+
+    input.value = '';
+    hideMentionDropdown();
+    renderMessages(activeChatChannel);
+    scrollToBottom();
+
+    // Trigger auto-replies
+    triggerAutoReplies(text);
+}
+
+function triggerAutoReplies(text) {
+    const agentIds = Object.keys(AGENT_REPLIES);
+
+    // Check for @everyone
+    if (text.includes('@everyone')) {
+        agentIds.forEach((agentId, i) => {
+            const delay = 1500 + i * 1800 + Math.random() * 1000;
+            scheduleReply(agentId, delay);
+        });
+        return;
+    }
+
+    // Check for individual mentions
+    const mentioned = agentIds.filter(id => text.includes('@' + id));
+    mentioned.forEach((agentId, i) => {
+        const delay = 1500 + i * 1200 + Math.random() * 1500;
+        scheduleReply(agentId, delay);
+    });
+}
+
+function scheduleReply(agentId, delayMs) {
+    setTimeout(() => {
+        const replies = AGENT_REPLIES[agentId];
+        if (!replies) return;
+        const reply = replies[Math.floor(Math.random() * replies.length)];
+        const msgs = window.chatMessages[activeChatChannel] || [];
+        msgs.push({
+            id: 'cm-auto-' + Date.now() + '-' + agentId,
+            author: agentId,
+            text: reply,
+            ts: new Date().toISOString()
+        });
+        window.chatMessages[activeChatChannel] = msgs;
+        renderMessages(activeChatChannel);
+        scrollToBottom();
+    }, delayMs);
 }

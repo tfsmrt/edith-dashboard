@@ -801,8 +801,7 @@ async function createTask() {
 
             if (savedTask && savedTask.id) {
                 window.missionControlData.tasks.push(savedTask);
-                saveTasksToLocalStorage();
-                showToast('success', 'Task Created', `"${savedTask.title}" assigned to the team.`);
+                        showToast('success', 'Task Created', `"${savedTask.title}" assigned to the team.`);
                 triggerAgentExecution(savedTask);
             } else {
                 throw new Error('Invalid response from server');
@@ -812,8 +811,7 @@ async function createTask() {
 
             // Fall back to localStorage
             const newTask = window.missionControlData.addTask(taskData);
-            saveTasksToLocalStorage();
-            showToast('success', 'Task Created', `"${newTask.title}" saved locally.`);
+                showToast('success', 'Task Created', `"${newTask.title}" saved locally.`);
             triggerAgentExecution(newTask);
         }
 
@@ -821,7 +819,6 @@ async function createTask() {
     } else {
         // No API — save to localStorage for persistence
         const newTask = window.missionControlData.addTask(taskData);
-        saveTasksToLocalStorage();
         showToast('success', 'Task Created', `"${newTask.title}" saved.`);
         triggerAgentExecution(newTask);
     }
@@ -1111,7 +1108,6 @@ async function handleDrop(e) {
             }
         }
         // Always persist to localStorage
-        saveTasksToLocalStorage();
 
         // Re-render the board
         renderDashboard();
@@ -3171,54 +3167,6 @@ function handleSwipeGesture() {
     }
 }
 
-// ─── Task Persistence (localStorage fallback) ──────────────────────────────
-
-const TASKS_STORAGE_KEY = 'edith-tasks-v1';
-
-function saveTasksToLocalStorage() {
-    try {
-        const tasks = window.missionControlData.getTasks();
-        localStorage.setItem(TASKS_STORAGE_KEY, JSON.stringify(tasks));
-    } catch(e) { console.warn('Task save failed', e); }
-}
-
-function loadTasksFromLocalStorage() {
-    try {
-        const saved = localStorage.getItem(TASKS_STORAGE_KEY);
-        if (!saved) return false;
-        const tasks = JSON.parse(saved);
-        if (tasks && tasks.length > 0) {
-            // Merge: localStorage tasks take priority, keep any not in localStorage
-            const localIds = new Set(tasks.map(t => t.id));
-            const sampleOnly = (window.missionControlData.tasks || [])
-                .filter(t => !localIds.has(t.id));
-            window.missionControlData.tasks = [...tasks, ...sampleOnly];
-            return true;
-        }
-    } catch(e) { console.warn('Task load failed', e); }
-    return false;
-}
-
-// Patch loadData to try localStorage if server unavailable
-const _originalLoadData = window.missionControlData.loadData.bind(window.missionControlData);
-window.missionControlData.loadData = async function() {
-    const result = await _originalLoadData();
-    // Always try localStorage — it has user-created tasks that override defaults
-    const localLoaded = loadTasksFromLocalStorage();
-    if (localLoaded) {
-        console.log('Tasks loaded from localStorage:', this.tasks.length);
-    }
-    return result;
-};
-
-// Also save whenever task status changes (drag & drop, status updates)
-const _originalAddTask = window.missionControlData.addTask.bind(window.missionControlData);
-window.missionControlData.addTask = function(task) {
-    const newTask = _originalAddTask(task);
-    saveTasksToLocalStorage();
-    return newTask;
-};
-
 // ─── Agent Execution — trigger agent to work on task ──────────────────────
 
 const AGENT_NAMES = {
@@ -3291,6 +3239,3 @@ function triggerAgentExecution(task) {
 }
 
 // Save tasks when drag & drop changes status
-document.addEventListener('taskStatusChanged', (e) => {
-    saveTasksToLocalStorage();
-});

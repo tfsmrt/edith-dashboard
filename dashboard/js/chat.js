@@ -671,62 +671,37 @@ function scheduleReply(agentId, delayMs, triggerText) {
     }, delayMs);
 }
 
-// ─── Chat Persistence — Server API (falls back to localStorage) ───────────────
-
-const CHAT_API_BASE = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
-    ? '' : null; // null = static mode, use localStorage
-
-async function serverAvailable() {
-    return CHAT_API_BASE !== null;
-}
+// ─── Chat Persistence — Server API only ─────────────────────────────────────
 
 async function saveChatHistory(channel, message) {
-    if (await serverAvailable()) {
-        try {
-            await fetch(`/api/chat/${channel}`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(message)
-            });
-            return;
-        } catch(e) { console.warn('Server save failed, using localStorage', e); }
-    }
-    // Fallback: localStorage
+    if (!message) return;
     try {
-        const CHAT_STORAGE_KEY = 'edith-chat-v1';
-        localStorage.setItem(CHAT_STORAGE_KEY, JSON.stringify(window.chatMessages));
-    } catch(e) { console.warn('localStorage save failed', e); }
+        await fetch(`/api/chat/${channel}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(message)
+        });
+    } catch(e) { /* server not available in static mode */ }
 }
 
 async function loadChatHistory() {
-    if (await serverAvailable()) {
-        try {
-            const channels = (window.chatChannels || []).map(c => c.id);
-            for (const ch of channels) {
-                const res = await fetch(`/api/chat/${ch}`);
-                if (res.ok) {
-                    const msgs = await res.json();
-                    if (msgs && msgs.length > 0) {
-                        window.chatMessages[ch] = msgs;
-                    }
+    try {
+        const channels = (window.chatChannels || []).map(c => c.id);
+        let loaded = false;
+        for (const ch of channels) {
+            const res = await fetch(`/api/chat/${ch}`);
+            if (res.ok) {
+                const msgs = await res.json();
+                if (msgs && msgs.length > 0) {
+                    window.chatMessages[ch] = msgs;
+                    loaded = true;
                 }
             }
-            return true;
-        } catch(e) { console.warn('Server load failed, using localStorage', e); }
-    }
-    // Fallback: localStorage
-    try {
-        const CHAT_STORAGE_KEY = 'edith-chat-v1';
-        const saved = localStorage.getItem(CHAT_STORAGE_KEY);
-        if (saved) {
-            const parsed = JSON.parse(saved);
-            Object.keys(parsed).forEach(ch => {
-                window.chatMessages[ch] = parsed[ch];
-            });
-            return true;
         }
-    } catch(e) { console.warn('localStorage load failed', e); }
-    return false;
+        return loaded;
+    } catch(e) {
+        return false; // static mode — use preloaded messages from data.js
+    }
 }
 
 // ─── Contextual Replies ───────────────────────────────────────────────────────
@@ -983,10 +958,7 @@ function submitCreateChannel() {
     window.chatChannels = [...(window.chatChannels || []), newChannel];
     window.chatMessages[name] = [];
 
-    // Persist custom channels
-    try { localStorage.setItem('edith-custom-channels', JSON.stringify(
-        (window.chatChannels || []).filter(c => !['general','announcements','dev-team','seo-marketing','qa','off-topic'].includes(c.id))
-    )); } catch(e) {}
+    // Custom channels live in memory for this session
 
     closeCreateChannelModal();
     renderChannelList();
@@ -994,14 +966,7 @@ function submitCreateChannel() {
 }
 
 function loadCustomChannels() {
-    try {
-        const saved = JSON.parse(localStorage.getItem('edith-custom-channels') || '[]');
-        saved.forEach(ch => {
-            if (!(window.chatChannels || []).find(c => c.id === ch.id)) {
-                window.chatChannels.push(ch);
-            }
-        });
-    } catch(e) {}
+    // No-op in server mode — channels loaded from server or defaults
 }
 
 

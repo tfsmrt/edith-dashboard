@@ -636,12 +636,8 @@ function updateDashboardName(name) {
  * Load saved dashboard name
  */
 function loadDashboardName() {
-    const savedName = localStorage.getItem('mc-dashboard-name');
-    if (savedName) {
-        updateDashboardName(savedName);
-        const input = document.getElementById('dashboard-name');
-        if (input) input.value = savedName;
-    }
+    // Removed — name is hardcoded in HTML
+    localStorage.removeItem('mc-dashboard-name');
 }
 
 /**

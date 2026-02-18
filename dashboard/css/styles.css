@@ -456,6 +456,18 @@ body::after {
     border-color: hsl(var(--border));
 }
 
+.btn-danger {
+    background: rgba(239, 68, 68, 0.15);
+    color: #ef4444;
+    border: 1px solid rgba(239, 68, 68, 0.4);
+}
+
+.btn-danger:hover {
+    background: #ef4444;
+    color: white;
+    border-color: #ef4444;
+}
+
 /* Theme toggle button */
 #theme-toggle {
     display: inline-flex;

@@ -725,6 +725,43 @@ function closeModal() {
 }
 
 /**
+ * Delete the currently selected task
+ */
+async function deleteTask() {
+    if (!selectedTask) return;
+
+    const taskId = selectedTask.id;
+    const taskTitle = selectedTask.title;
+
+    // Confirm deletion
+    if (!confirm(`Delete task "${taskTitle}"?\n\nThis cannot be undone.`)) {
+        return;
+    }
+
+    try {
+        showLoading('Deleting task...');
+
+        // Delete via API
+        await window.MissionControlAPI.deleteTask(taskId);
+
+        // Remove from local data
+        window.missionControlData.deleteTask(taskId);
+
+        // Close modal and re-render
+        closeModal();
+        renderDashboard();
+
+        hideLoading();
+        showToast(`Task "${taskTitle}" deleted`, 'success');
+
+    } catch (error) {
+        hideLoading();
+        console.error('Failed to delete task:', error);
+        showToast('Failed to delete task: ' + error.message, 'error');
+    }
+}
+
+/**
  * Open create task modal
  */
 function openCreateTaskModal() {

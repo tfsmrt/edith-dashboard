@@ -485,6 +485,15 @@ class MissionControlData {
         this.tasks.unshift(newTask);
         return newTask;
     }
+
+    deleteTask(taskId) {
+        const index = this.tasks.findIndex(t => t.id === taskId);
+        if (index !== -1) {
+            this.tasks.splice(index, 1);
+            return true;
+        }
+        return false;
+    }
 }
 
 // Global data instance

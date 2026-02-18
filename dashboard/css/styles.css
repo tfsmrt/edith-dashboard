@@ -5428,3 +5428,15 @@ body::after {
 
 /* Footer removed per user request */
 .footer { display: none !important; }
+
+/* Logo link — no focus ring, no underline */
+a.logo, a.logo:hover, a.logo:focus {
+    outline: none;
+    text-decoration: none;
+    color: hsl(var(--foreground));
+}
+
+/* Version badge — no border */
+.version {
+    border: none !important;
+}

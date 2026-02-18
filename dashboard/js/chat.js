@@ -107,7 +107,9 @@ function switchChannel(channelId, pushState = true) {
             history.pushState({ channel: channelId }, `#${ch.name} — E.D.I.T.H`, newUrl);
         }
     }
-    document.title = `#${ch.name} — E.D.I.T.H Dashboard`;
+    if (document.getElementById('chat-view')?.classList.contains('active')) {
+        document.title = `#${ch.name} — E.D.I.T.H`;
+    }
 
     renderMessages(channelId);
     scrollToBottom();
@@ -139,7 +141,9 @@ function openDM(agentId, pushState = true) {
             history.pushState({ dm: agentId }, `${agentName} — E.D.I.T.H`, newUrl);
         }
     }
-    document.title = `${agentName} — E.D.I.T.H Dashboard`;
+    if (document.getElementById('chat-view')?.classList.contains('active')) {
+        document.title = `${agentName} — E.D.I.T.H`;
+    }
 
     // Seed DM with a greeting if empty
     const dmKey = `dm-${agentId}`;
@@ -436,8 +440,8 @@ function showBoardView() {
 
     // Reset URL to root when going back to board
     if (window.location.pathname.startsWith('/chat')) {
-        history.pushState({}, 'E.D.I.T.H Dashboard', '/');
-        document.title = 'E.D.I.T.H Dashboard';
+        history.pushState({}, 'E.D.I.T.H', '/');
+    document.title = 'E.D.I.T.H';
     }
 
     // Force reflow so height is recalculated correctly

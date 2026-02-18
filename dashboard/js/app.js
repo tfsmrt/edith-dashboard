@@ -797,17 +797,16 @@ async function createTask() {
 
             if (savedTask && savedTask.id) {
                 window.missionControlData.tasks.push(savedTask);
-                        showToast('success', 'Task Created', `"${savedTask.title}" assigned to the team.`);
+                showToast('success', 'Task Created ☁️', `"${savedTask.title}" saved to cloud — will persist after reload.`);
                 triggerAgentExecution(savedTask);
             } else {
                 throw new Error('Invalid response from server');
             }
         } catch (error) {
-            console.error('Failed to save task to server:', error);
-
-            // Fall back to localStorage
+            console.error('Failed to save task to Worker API:', error);
+            // Fall back to in-memory only — task will NOT persist after reload
             const newTask = window.missionControlData.addTask(taskData);
-                showToast('success', 'Task Created', `"${newTask.title}" saved locally.`);
+            showToast('error', 'API Error ⚠️', `Task visible now but NOT saved to cloud (${error.message}). Will be lost on reload.`);
             triggerAgentExecution(newTask);
         }
 

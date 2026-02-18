@@ -1,8 +1,13 @@
 /**
  * E.D.I.T.H API Worker
  *
- * Cloudflare Worker that provides a persistent task API
- * backed by GitHub (tfsmrt/mission-control repo).
+ * Cloudflare Worker providing persistent task/chat API via KV storage.
+ * Used as the backend for edith-dashboard.pages.dev
+ *
+ * KV Keys:
+ *   task:{id}           — individual task JSON
+ *   task-index          — JSON array of task IDs (for listing)
+ *   chat:{channel}      — JSON array of messages
  *
  * Routes:
  *   GET    /api/tasks           — list all tasks
@@ -11,181 +16,120 @@
  *   PUT    /api/tasks/:id       — replace task
  *   PATCH  /api/tasks/:id       — update fields
  *   DELETE /api/tasks/:id       — delete task
- *   GET    /api/agents          — list agents
- *   GET    /api/humans          — list humans
- *   POST   /api/chat/:channel   — append chat message
- *   GET    /api/chat/:channel   — get chat messages
+ *   GET    /api/chat/:channel   — get messages
+ *   POST   /api/chat/:channel   — append message
+ *   GET    /api/metrics         — basic metrics
  *   GET    /health              — health check
  */
 
-const CORS_HEADERS = {
+const CORS = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Methods': 'GET, POST, PUT, PATCH, DELETE, OPTIONS',
   'Access-Control-Allow-Headers': 'Content-Type, Authorization',
 };
 
-function json(data, status = 200) {
-  return new Response(JSON.stringify(data), {
+const R = (data, status = 200) =>
+  new Response(JSON.stringify(data), {
     status,
-    headers: { 'Content-Type': 'application/json', ...CORS_HEADERS },
+    headers: { 'Content-Type': 'application/json', ...CORS },
   });
+
+const E = (msg, status = 400) => R({ error: msg }, status);
+
+// ── KV helpers ────────────────────────────────────────────────────────────────
+
+async function getIndex(kv) {
+  const raw = await kv.get('task-index');
+  return raw ? JSON.parse(raw) : [];
 }
 
-function err(message, status = 400) {
-  return json({ error: message }, status);
+async function setIndex(kv, ids) {
+  await kv.put('task-index', JSON.stringify(ids));
 }
 
-// ── GitHub API helpers ────────────────────────────────────────────────────────
-
-async function ghGet(env, path) {
-  const url = `https://api.github.com/repos/${env.GITHUB_OWNER}/${env.GITHUB_REPO}/contents/${path}`;
-  const res = await fetch(url, {
-    headers: {
-      Authorization: `Bearer ${env.GITHUB_TOKEN}`,
-      Accept: 'application/vnd.github+json',
-      'User-Agent': 'edith-api-worker/1.0',
-    },
-  });
-  if (res.status === 404) return null;
-  if (!res.ok) throw new Error(`GitHub GET ${path} → ${res.status}`);
-  return res.json();
+async function getTask(kv, id) {
+  const raw = await kv.get(`task:${id}`);
+  return raw ? JSON.parse(raw) : null;
 }
 
-async function ghPut(env, path, content, sha, message) {
-  const url = `https://api.github.com/repos/${env.GITHUB_OWNER}/${env.GITHUB_REPO}/contents/${path}`;
-  const body = {
-    message,
-    content: btoa(unescape(encodeURIComponent(content))),
-    ...(sha ? { sha } : {}),
-  };
-  const res = await fetch(url, {
-    method: 'PUT',
-    headers: {
-      Authorization: `Bearer ${env.GITHUB_TOKEN}`,
-      Accept: 'application/vnd.github+json',
-      'Content-Type': 'application/json',
-      'User-Agent': 'edith-api-worker/1.0',
-    },
-    body: JSON.stringify(body),
-  });
-  if (!res.ok) {
-    const text = await res.text();
-    throw new Error(`GitHub PUT ${path} → ${res.status}: ${text}`);
+async function putTask(kv, task) {
+  await kv.put(`task:${task.id}`, JSON.stringify(task));
+  // Ensure it's in the index
+  const ids = await getIndex(kv);
+  if (!ids.includes(task.id)) {
+    ids.unshift(task.id); // newest first
+    await setIndex(kv, ids);
   }
-  return res.json();
 }
 
-async function ghDelete(env, path, sha, message) {
-  const url = `https://api.github.com/repos/${env.GITHUB_OWNER}/${env.GITHUB_REPO}/contents/${path}`;
-  const res = await fetch(url, {
-    method: 'DELETE',
-    headers: {
-      Authorization: `Bearer ${env.GITHUB_TOKEN}`,
-      Accept: 'application/vnd.github+json',
-      'Content-Type': 'application/json',
-      'User-Agent': 'edith-api-worker/1.0',
-    },
-    body: JSON.stringify({ message, sha }),
-  });
-  if (!res.ok) throw new Error(`GitHub DELETE ${path} → ${res.status}`);
-  return res.json();
+async function delTask(kv, id) {
+  await kv.delete(`task:${id}`);
+  const ids = await getIndex(kv);
+  await setIndex(kv, ids.filter(i => i !== id));
 }
 
-function decodeContent(b64) {
-  // GitHub returns base64 with newlines
-  return decodeURIComponent(escape(atob(b64.replace(/\n/g, ''))));
+async function listTasks(kv) {
+  const ids = await getIndex(kv);
+  const tasks = await Promise.all(ids.map(id => getTask(kv, id)));
+  return tasks.filter(Boolean); // remove nulls from deleted tasks
 }
 
-// ── Task helpers ──────────────────────────────────────────────────────────────
-
-async function listTasks(env) {
-  const dir = await ghGet(env, env.TASKS_PATH);
-  if (!dir || !Array.isArray(dir)) return [];
-  const items = [];
-  await Promise.all(
-    dir
-      .filter(f => f.name.endsWith('.json'))
-      .map(async (f) => {
-        try {
-          const file = await ghGet(env, f.path);
-          if (file && file.content) {
-            items.push(JSON.parse(decodeContent(file.content)));
-          }
-        } catch (e) { /* skip bad files */ }
-      })
-  );
-  // Sort newest first
-  return items.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+async function getChatMessages(kv, channel) {
+  const raw = await kv.get(`chat:${channel}`);
+  return raw ? JSON.parse(raw) : [];
 }
 
-async function getTask(env, id) {
-  const file = await ghGet(env, `${env.TASKS_PATH}/${id}.json`);
-  if (!file) return null;
-  return { data: JSON.parse(decodeContent(file.content)), sha: file.sha };
-}
-
-async function saveTask(env, id, taskData, sha, action) {
-  const content = JSON.stringify(taskData, null, 2);
-  await ghPut(env, `${env.TASKS_PATH}/${id}.json`, content, sha,
-    `[edith-api] ${action}: ${taskData.title || id}`);
-  return taskData;
-}
-
-// ── Chat helpers ──────────────────────────────────────────────────────────────
-
-async function getChatMessages(env, channel) {
-  const path = `.mission-control/messages/chat-${channel}.json`;
-  const file = await ghGet(env, path);
-  if (!file) return { messages: [], sha: null };
-  return {
-    messages: JSON.parse(decodeContent(file.content)),
-    sha: file.sha,
-  };
-}
-
-async function appendChatMessage(env, channel, msg) {
-  const path = `.mission-control/messages/chat-${channel}.json`;
-  const { messages, sha } = await getChatMessages(env, channel);
-  messages.push(msg);
-  const content = JSON.stringify(messages, null, 2);
-  await ghPut(env, path, content, sha,
-    `[chat] ${msg.author} in #${channel}`);
+async function appendChat(kv, channel, msg) {
+  const msgs = await getChatMessages(kv, channel);
+  msgs.push(msg);
+  await kv.put(`chat:${channel}`, JSON.stringify(msgs));
   return msg;
 }
+
+// ── Static data (agents/humans — not stored in KV, defined here) ──────────────
+
+const AGENTS = [
+  { id: 'agent-steve',   name: 'Steve Rogers',     designation: 'CEO — Captain of Operations',  status: 'active' },
+  { id: 'agent-tony',    name: 'Tony Stark',        designation: 'Senior Developer — Iron Architect', status: 'active' },
+  { id: 'agent-peter',   name: 'Peter Parker',      designation: 'Junior Developer — Web-Slinger', status: 'active' },
+  { id: 'agent-steven',  name: 'Steven Strange',    designation: 'SEO Analyst — Master of the Web', status: 'active' },
+  { id: 'agent-thor',    name: 'Thor Odinson',      designation: 'Marketing Lead — God of Campaigns', status: 'active' },
+  { id: 'agent-natasha', name: 'Natasha Romanoff',  designation: 'QA Lead — Black Widow',        status: 'active' },
+];
+
+const HUMANS = [
+  { id: 'human-somrat', name: 'Somrat', designation: 'CEO & Founder', status: 'online' },
+];
 
 // ── Router ────────────────────────────────────────────────────────────────────
 
 export default {
   async fetch(request, env) {
-    // CORS preflight
     if (request.method === 'OPTIONS') {
-      return new Response(null, { headers: CORS_HEADERS });
+      return new Response(null, { headers: CORS });
     }
 
     const url = new URL(request.url);
     const { pathname } = url;
     const method = request.method;
+    const kv = env.TASKS_KV;
 
-    // ── Health
-    if (pathname === '/health') {
-      return json({ ok: true, ts: new Date().toISOString() });
-    }
-
-    // ── GET /api/tasks
-    if (pathname === '/api/tasks' && method === 'GET') {
-      try {
-        const tasks = await listTasks(env);
-        return json(tasks);
-      } catch (e) {
-        return err(e.message, 500);
+    try {
+      // ── Health
+      if (pathname === '/health') {
+        return R({ ok: true, ts: new Date().toISOString(), storage: 'kv' });
       }
-    }
 
-    // ── POST /api/tasks
-    if (pathname === '/api/tasks' && method === 'POST') {
-      try {
+      // ── GET /api/tasks
+      if (pathname === '/api/tasks' && method === 'GET') {
+        const tasks = await listTasks(kv);
+        return R(tasks);
+      }
+
+      // ── POST /api/tasks
+      if (pathname === '/api/tasks' && method === 'POST') {
         const body = await request.json();
-        if (!body.title) return err('title required');
+        if (!body.title) return E('title required');
         const date = new Date().toISOString().split('T')[0].replace(/-/g, '');
         const id = body.id || `task-${date}-${Date.now()}`;
         const task = {
@@ -199,160 +143,98 @@ export default {
           dependencies: body.dependencies || [],
           blocked_by: body.blocked_by || [],
         };
-        await saveTask(env, id, task, null, 'CREATED');
-        return json(task, 201);
-      } catch (e) {
-        return err(e.message, 500);
+        await putTask(kv, task);
+        return R(task, 201);
       }
-    }
 
-    // ── /api/tasks/:id routes
-    const taskMatch = pathname.match(/^\/api\/tasks\/([^/]+)$/);
-    if (taskMatch) {
-      const id = taskMatch[1];
+      // ── /api/tasks/:id
+      const taskMatch = pathname.match(/^\/api\/tasks\/([^/]+)$/);
+      if (taskMatch) {
+        const id = taskMatch[1];
 
-      if (method === 'GET') {
-        try {
-          const result = await getTask(env, id);
-          if (!result) return err('Task not found', 404);
-          return json(result.data);
-        } catch (e) {
-          return err(e.message, 500);
+        if (method === 'GET') {
+          const task = await getTask(kv, id);
+          return task ? R(task) : E('Task not found', 404);
         }
-      }
 
-      if (method === 'PUT') {
-        try {
+        if (method === 'PUT') {
           const body = await request.json();
-          const existing = await getTask(env, id);
-          const task = {
-            ...(existing?.data || {}),
-            ...body,
-            id,
-            updated_at: new Date().toISOString(),
-          };
-          await saveTask(env, id, task, existing?.sha, 'UPDATED');
-          return json(task);
-        } catch (e) {
-          return err(e.message, 500);
+          const existing = await getTask(kv, id) || {};
+          const task = { ...existing, ...body, id, updated_at: new Date().toISOString() };
+          await putTask(kv, task);
+          return R(task);
         }
-      }
 
-      if (method === 'PATCH') {
-        try {
+        if (method === 'PATCH') {
           const body = await request.json();
-          const existing = await getTask(env, id);
-          if (!existing) return err('Task not found', 404);
-          const allowed = ['status', 'assignee', 'priority', 'title', 'description', 'comments', 'labels'];
-          const task = { ...existing.data };
+          const existing = await getTask(kv, id);
+          if (!existing) return E('Task not found', 404);
+          const allowed = ['status', 'assignee', 'priority', 'title', 'description', 'comments', 'labels', 'blocked_by'];
+          const task = { ...existing };
           for (const field of allowed) {
             if (body[field] !== undefined) task[field] = body[field];
           }
           task.updated_at = new Date().toISOString();
-          await saveTask(env, id, task, existing.sha, 'PATCHED');
-          return json(task);
-        } catch (e) {
-          return err(e.message, 500);
+          await putTask(kv, task);
+          return R(task);
+        }
+
+        if (method === 'DELETE') {
+          const existing = await getTask(kv, id);
+          if (!existing) return E('Task not found', 404);
+          await delTask(kv, id);
+          return R({ success: true });
         }
       }
 
-      if (method === 'DELETE') {
-        try {
-          const existing = await getTask(env, id);
-          if (!existing) return err('Task not found', 404);
-          await ghDelete(env, `${env.TASKS_PATH}/${id}.json`, existing.sha,
-            `[edith-api] DELETED: ${id}`);
-          return json({ success: true });
-        } catch (e) {
-          return err(e.message, 500);
+      // ── GET /api/agents
+      if (pathname === '/api/agents' && method === 'GET') {
+        return R(AGENTS);
+      }
+
+      // ── GET /api/humans
+      if (pathname === '/api/humans' && method === 'GET') {
+        return R(HUMANS);
+      }
+
+      // ── Chat
+      const chatMatch = pathname.match(/^\/api\/chat\/([^/]+)$/);
+      if (chatMatch) {
+        const channel = chatMatch[1];
+
+        if (method === 'GET') {
+          return R(await getChatMessages(kv, channel));
+        }
+
+        if (method === 'POST') {
+          const body = await request.json();
+          if (!body.author || !body.text) return E('author and text required');
+          const msg = {
+            id: body.id || `cm-${Date.now()}`,
+            author: body.author,
+            text: body.text,
+            ts: body.ts || new Date().toISOString(),
+          };
+          await appendChat(kv, channel, msg);
+          return R(msg, 201);
         }
       }
-    }
 
-    // ── GET /api/agents
-    if (pathname === '/api/agents' && method === 'GET') {
-      try {
-        const dir = await ghGet(env, '.mission-control/agents');
-        if (!dir || !Array.isArray(dir)) return json([]);
-        const agents = [];
-        await Promise.all(
-          dir.filter(f => f.name.endsWith('.json')).map(async (f) => {
-            try {
-              const file = await ghGet(env, f.path);
-              if (file?.content) agents.push(JSON.parse(decodeContent(file.content)));
-            } catch (e) {}
-          })
-        );
-        return json(agents);
-      } catch (e) {
-        return err(e.message, 500);
-      }
-    }
-
-    // ── GET /api/humans
-    if (pathname === '/api/humans' && method === 'GET') {
-      try {
-        const dir = await ghGet(env, '.mission-control/humans');
-        if (!dir || !Array.isArray(dir)) return json([]);
-        const humans = [];
-        await Promise.all(
-          dir.filter(f => f.name.endsWith('.json')).map(async (f) => {
-            try {
-              const file = await ghGet(env, f.path);
-              if (file?.content) humans.push(JSON.parse(decodeContent(file.content)));
-            } catch (e) {}
-          })
-        );
-        return json(humans);
-      } catch (e) {
-        return err(e.message, 500);
-      }
-    }
-
-    // ── Chat: GET /api/chat/:channel
-    const chatGet = pathname.match(/^\/api\/chat\/([^/]+)$/);
-    if (chatGet && method === 'GET') {
-      try {
-        const { messages } = await getChatMessages(env, chatGet[1]);
-        return json(messages);
-      } catch (e) {
-        return err(e.message, 500);
-      }
-    }
-
-    // ── Chat: POST /api/chat/:channel
-    const chatPost = pathname.match(/^\/api\/chat\/([^/]+)$/);
-    if (chatPost && method === 'POST') {
-      try {
-        const body = await request.json();
-        if (!body.author || !body.text) return err('author and text required');
-        const msg = {
-          id: body.id || `cm-${Date.now()}`,
-          author: body.author,
-          text: body.text,
-          ts: body.ts || new Date().toISOString(),
-        };
-        await appendChatMessage(env, chatPost[1], msg);
-        return json(msg, 201);
-      } catch (e) {
-        return err(e.message, 500);
-      }
-    }
-
-    // ── Metrics (basic)
-    if (pathname === '/api/metrics' && method === 'GET') {
-      try {
-        const tasks = await listTasks(env);
+      // ── GET /api/metrics
+      if (pathname === '/api/metrics' && method === 'GET') {
+        const tasks = await listTasks(kv);
         const byStatus = {};
-        ['INBOX','ASSIGNED','IN_PROGRESS','REVIEW','DONE','BLOCKED'].forEach(s => {
+        ['INBOX', 'ASSIGNED', 'IN_PROGRESS', 'REVIEW', 'DONE', 'BLOCKED'].forEach(s => {
           byStatus[s] = tasks.filter(t => t.status === s).length;
         });
-        return json({ totalTasks: tasks.length, tasksByStatus: byStatus });
-      } catch (e) {
-        return err(e.message, 500);
+        return R({ totalTasks: tasks.length, tasksByStatus: byStatus, activeAgents: AGENTS.length });
       }
-    }
 
-    return err('Not found', 404);
+      return E('Not found', 404);
+
+    } catch (e) {
+      console.error(e);
+      return E(e.message, 500);
+    }
   },
 };

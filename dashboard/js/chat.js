@@ -3,6 +3,7 @@
  */
 
 let activeChatChannel = 'general';
+let activeDM = null; // agentId if in DM mode
 let mentionIndex = -1;
 let mentionMatches = [];
 let allMembers = [];
@@ -40,10 +41,10 @@ function renderChannelList() {
 
     let html = '';
     Object.entries(categories).forEach(([cat, chs]) => {
-        html += `<div class="chat-category">
-            <div class="chat-category-label">${cat}</div>`;
+        html += `<div class="chat-category"><div class="chat-category-label">${cat}</div>`;
         chs.forEach(ch => {
-            html += `<div class="chat-channel-item${ch.id === activeChatChannel ? ' active' : ''}"
+            const isActive = !activeDM && ch.id === activeChatChannel;
+            html += `<div class="chat-channel-item${isActive ? ' active' : ''}"
                 data-channel="${ch.id}" onclick="switchChannel('${ch.id}')">
                 <span class="chat-channel-hash">#</span>
                 <span>${ch.name}</span>
@@ -51,12 +52,42 @@ function renderChannelList() {
         });
         html += '</div>';
     });
+
+    // Direct Messages section
+    const agents = allMembers.filter(m => m.kind === 'agent');
+    if (agents.length) {
+        html += `<div class="chat-category"><div class="chat-category-label">Direct Messages</div>`;
+        agents.forEach(agent => {
+            const isActive = activeDM === agent.id;
+            const initials = agent.name.split(' ').map(w => w[0]).join('').slice(0,2).toUpperCase();
+            const statusClass = agent.status === 'active' ? 'online' : 'offline';
+            html += `<div class="chat-channel-item${isActive ? ' active' : ''}"
+                onclick="openDM('${agent.id}')"
+                style="gap:8px">
+                <div style="position:relative;flex-shrink:0">
+                    ${agent.avatar
+                        ? `<img src="${agent.avatar}" style="width:22px;height:22px;border-radius:50%;object-fit:cover" onerror="this.style.display='none'">`
+                        : `<div style="width:22px;height:22px;border-radius:50%;background:hsl(var(--primary));color:hsl(var(--primary-foreground));display:flex;align-items:center;justify-content:center;font-size:0.6rem;font-weight:700">${initials}</div>`
+                    }
+                    <div class="chat-member-status ${statusClass}"
+                        style="position:absolute;bottom:-1px;right:-1px;width:8px;height:8px;border:2px solid hsl(var(--card));border-radius:50%"></div>
+                </div>
+                <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${agent.name.split(' ')[0]}</span>
+            </div>`;
+        });
+        html += '</div>';
+    }
+
     scroll.innerHTML = html;
 }
 
 function switchChannel(channelId, pushState = true) {
+    activeDM = null;
     activeChatChannel = channelId;
     renderChannelList();
+    // Restore hash icon
+    const hashEl = document.querySelector('.chat-channel-header-hash');
+    if (hashEl) hashEl.textContent = '#';
 
     const channels = window.chatChannels || [];
     const ch = channels.find(c => c.id === channelId) || { name: channelId, topic: '' };
@@ -80,6 +111,58 @@ function switchChannel(channelId, pushState = true) {
     renderMessages(channelId);
     scrollToBottom();
 }
+
+function openDM(agentId, pushState = true) {
+    activeDM = agentId;
+    activeChatChannel = `dm-${agentId}`;
+    renderChannelList();
+
+    const agent = allMembers.find(m => m.id === agentId);
+    const agentName = agent ? agent.name : agentId;
+    const role = agent ? (agent.designation || agent.role || '') : '';
+
+    // Update header
+    const nameEl = document.getElementById('chat-active-channel-name');
+    const topicEl = document.getElementById('chat-active-channel-topic');
+    const inputEl = document.getElementById('chat-message-input');
+    const hashEl = document.querySelector('.chat-channel-header-hash');
+
+    if (nameEl) nameEl.textContent = agentName;
+    if (topicEl) topicEl.textContent = role;
+    if (inputEl) inputEl.placeholder = `Message ${agentName}...`;
+    if (hashEl) hashEl.textContent = '💬';
+
+    if (pushState) {
+        const newUrl = `/chat/${agentId}`;
+        if (window.location.pathname !== newUrl) {
+            history.pushState({ dm: agentId }, `${agentName} — E.D.I.T.H`, newUrl);
+        }
+    }
+    document.title = `${agentName} — E.D.I.T.H Dashboard`;
+
+    // Seed DM with a greeting if empty
+    const dmKey = `dm-${agentId}`;
+    if (!window.chatMessages[dmKey] || window.chatMessages[dmKey].length === 0) {
+        const greetings = {
+            'agent-steve': "Hey. What do you need?",
+            'agent-tony': "You've got my attention. Make it count.",
+            'agent-peter': "Oh hey! What's up? Need something? I'm on it! 😊",
+            'agent-steven': "I was expecting you. What do you need to know?",
+            'agent-thor': "SOMRAT! You seek the wisdom of THOR! ⚡ How may I serve?",
+            'agent-natasha': "You reached out. That means something's on your mind. What is it?"
+        };
+        window.chatMessages[dmKey] = [{
+            id: `dm-greet-${agentId}`,
+            author: agentId,
+            text: greetings[agentId] || `Hello. How can I help?`,
+            ts: new Date().toISOString()
+        }];
+    }
+
+    renderMessages(dmKey);
+    scrollToBottom();
+}
+
 
 // ─── Messages ─────────────────────────────────────────────────────────────
 
@@ -525,6 +608,12 @@ function sendChatMsg() {
 function triggerAutoReplies(text) {
     const agentIds = Object.keys(AGENT_REPLIES);
 
+    // In DM mode — always reply from that agent, no mention needed
+    if (activeDM) {
+        scheduleReply(activeDM, 1200 + Math.random() * 1500, text);
+        return;
+    }
+
     // Check for @everyone
     if (text.includes('@everyone')) {
         agentIds.forEach((agentId, i) => {
@@ -789,26 +878,29 @@ async function initChat() {
 
 // ─── URL Router ───────────────────────────────────────────────────────────────
 
+function routeToPath(path, pushState = false) {
+    const dmMatch = path.match(/^\/chat\/(agent-[\w-]+)$/);
+    const chMatch = path.match(/^\/chat\/?([\w-]*)$/);
+
+    if (dmMatch) {
+        showChatView(null);
+        setTimeout(() => openDM(dmMatch[1], pushState), 150);
+    } else if (chMatch) {
+        const channelId = chMatch[1] || 'general';
+        showChatView(channelId);
+    } else {
+        showBoardView();
+    }
+}
+
 function initRouter() {
     const path = window.location.pathname;
-    const chatMatch = path.match(/^\/chat\/?([\w-]*)$/);
-
-    if (chatMatch) {
-        const channelId = chatMatch[1] || 'general';
-        // Auto-open chat view on the right channel
-        setTimeout(() => showChatView(channelId), 100);
+    if (path.startsWith('/chat')) {
+        setTimeout(() => routeToPath(path, false), 200);
     }
 
-    // Handle browser back/forward
     window.addEventListener('popstate', (e) => {
-        const p = window.location.pathname;
-        const m = p.match(/^\/chat\/?([\w-]*)$/);
-        if (m) {
-            const ch = m[1] || 'general';
-            showChatView(ch);
-        } else {
-            showBoardView();
-        }
+        routeToPath(window.location.pathname, false);
     });
 }
 

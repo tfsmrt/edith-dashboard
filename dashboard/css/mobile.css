@@ -1,5 +1,5 @@
 /* ============================================
-   JARVIS MISSION CONTROL - MOBILE RESPONSIVE
+   E.D.I.T.H DASHBOARD - MOBILE RESPONSIVE
    Comprehensive mobile-first responsive styles
    ============================================ */
 
@@ -143,7 +143,7 @@
 }
 
 .mobile-nav-item span {
-    font-family: 'Rajdhani', sans-serif;
+    font-family: 'Inter', system-ui, sans-serif;
     font-size: 0.625rem;
     font-weight: 600;
     text-transform: uppercase;
@@ -168,7 +168,7 @@
     padding: 0 4px;
     background: var(--neon-red);
     color: white;
-    font-family: 'Share Tech Mono', monospace;
+    font-family: 'Inter', system-ui, monospace;
     font-size: 0.5625rem;
     font-weight: 700;
     border-radius: 999px;

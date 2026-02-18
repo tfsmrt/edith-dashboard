@@ -1,12 +1,12 @@
 /**
- * JARVIS Mission Control - Main Application
+ * E.D.I.T.H Dashboard - Main Application
  * Local file-based system with real-time updates via WebSocket
  */
 
 // State
 let selectedTask = null;
 let currentTheme = 'dark';
-let currentColorTheme = 'matrix';
+let currentColorTheme = 'default';
 let currentProfileAgent = null;
 let currentProfileTab = 'attention';
 let currentThreadId = null;
@@ -17,7 +17,7 @@ let chatPanelOpen = false;
  * Initialize the dashboard
  */
 async function init() {
-    console.log('Initializing JARVIS Mission Control...');
+    console.log('Initializing E.D.I.T.H Dashboard...');
 
     // Initialize theme
     initTheme();
@@ -171,17 +171,15 @@ function showToast(type, title, message) {
  * Initialize theme from localStorage or system preference
  */
 function initTheme() {
-    // Check localStorage for saved preferences
-    const savedTheme = localStorage.getItem('mc-theme');
+    // Check localStorage for saved preferences (check both keys)
+    const savedTheme = localStorage.getItem('theme') || localStorage.getItem('mc-theme');
     const savedColorTheme = localStorage.getItem('mc-color-theme');
 
     if (savedTheme) {
         currentTheme = savedTheme;
     } else {
-        // Check system preference
-        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches) {
-            currentTheme = 'light';
-        }
+        // Default to dark mode
+        currentTheme = 'dark';
     }
 
     if (savedColorTheme) {
@@ -210,10 +208,13 @@ function initTheme() {
 
     // Listen for system theme changes
     window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
-        if (!localStorage.getItem('mc-theme')) {
+        if (!localStorage.getItem('mc-theme') && !localStorage.getItem('theme')) {
             setTheme(e.matches ? 'dark' : 'light');
         }
     });
+
+    // Update the header toggle icon
+    updateThemeIcon();
 }
 
 /**
@@ -231,10 +232,46 @@ function setTheme(theme) {
 function applyTheme(theme) {
     document.documentElement.setAttribute('data-theme', theme);
 
+    // Also toggle the .dark class (shadcn/ui approach)
+    if (theme === 'dark') {
+        document.documentElement.classList.add('dark');
+    } else {
+        document.documentElement.classList.remove('dark');
+    }
+
     // Update all toggle buttons (both old and new selectors)
     document.querySelectorAll('.theme-toggle-btn, .mode-btn').forEach(btn => {
         btn.classList.toggle('active', btn.dataset.theme === theme);
     });
+
+    // Update the header theme toggle icon
+    updateThemeIcon();
+}
+
+/**
+ * Toggle dark/light theme (shadcn/ui approach)
+ */
+function toggleTheme() {
+    const isDark = document.documentElement.classList.toggle('dark');
+    const theme = isDark ? 'dark' : 'light';
+    currentTheme = theme;
+    localStorage.setItem('theme', theme);
+    localStorage.setItem('mc-theme', theme);
+    document.documentElement.setAttribute('data-theme', theme);
+    // Update all mode buttons
+    document.querySelectorAll('.theme-toggle-btn, .mode-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.theme === theme);
+    });
+    updateThemeIcon();
+}
+
+/**
+ * Update the theme toggle button icon
+ */
+function updateThemeIcon() {
+    const isDark = document.documentElement.classList.contains('dark');
+    const btn = document.getElementById('theme-toggle');
+    if (btn) btn.innerHTML = isDark ? '☀️' : '🌙';
 }
 
 /**
@@ -1874,7 +1911,7 @@ async function sendChatMessage() {
 
     // Detect @mentions to set recipient
     const mentionMatch = content.match(/@(\w+)/);
-    let to = 'agent-jarvis'; // Default recipient
+    let to = 'agent-edith'; // Default recipient
     if (mentionMatch) {
         const agents = window.missionControlData.getAgents();
         const mentioned = agents.find(a =>

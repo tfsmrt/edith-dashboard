@@ -1,10 +1,18 @@
 /* ============================================
-   MISSION CONTROL - THEME COLLECTION
+   E.D.I.T.H DASHBOARD - THEME COLLECTION
    Multiple color themes for different preferences
    ============================================ */
 
 /* ============================================
-   THEME 1: MATRIX (Default) - Classic green/black
+   THEME 0: DEFAULT — shadcn/ui (no overrides needed)
+   Variables are set by :root and .dark in styles.css
+   ============================================ */
+[data-color-theme="default"] {
+    /* Uses shadcn/ui variables from :root / .dark */
+}
+
+/* ============================================
+   THEME 1: MATRIX - Classic green/black
    ============================================ */
 [data-color-theme="matrix"] {
     --bg-primary: #000000;
@@ -36,8 +44,8 @@
 
     --glow-primary: 0 0 20px rgba(0, 255, 65, 0.3), 0 0 40px rgba(0, 255, 65, 0.1);
 
-    --theme-font-heading: 'Share Tech Mono', monospace;
-    --theme-font-body: 'Rajdhani', sans-serif;
+    --theme-font-heading: 'Inter', system-ui, monospace;
+    --theme-font-body: 'Inter', system-ui, sans-serif;
 }
 
 /* ============================================
@@ -74,7 +82,7 @@
     --glow-primary: 0 0 20px rgba(0, 212, 255, 0.3), 0 0 40px rgba(0, 212, 255, 0.1);
 
     --theme-font-heading: 'Orbitron', sans-serif;
-    --theme-font-body: 'Rajdhani', sans-serif;
+    --theme-font-body: 'Inter', system-ui, sans-serif;
 }
 
 /* ============================================
@@ -111,7 +119,7 @@
     --glow-primary: 0 0 20px rgba(255, 0, 255, 0.4), 0 0 40px rgba(0, 255, 255, 0.2);
 
     --theme-font-heading: 'Orbitron', sans-serif;
-    --theme-font-body: 'Rajdhani', sans-serif;
+    --theme-font-body: 'Inter', system-ui, sans-serif;
 }
 
 /* ============================================
@@ -147,8 +155,8 @@
 
     --glow-primary: 0 0 20px rgba(255, 176, 0, 0.3), 0 0 40px rgba(255, 176, 0, 0.1);
 
-    --theme-font-heading: 'Share Tech Mono', monospace;
-    --theme-font-body: 'Share Tech Mono', monospace;
+    --theme-font-heading: 'Inter', system-ui, monospace;
+    --theme-font-body: 'Inter', system-ui, monospace;
 }
 
 /* ============================================
@@ -185,7 +193,7 @@
     --glow-primary: 0 0 20px rgba(153, 102, 255, 0.3), 0 0 40px rgba(153, 102, 255, 0.1);
 
     --theme-font-heading: 'Orbitron', sans-serif;
-    --theme-font-body: 'Rajdhani', sans-serif;
+    --theme-font-body: 'Inter', system-ui, sans-serif;
 }
 
 /* ============================================
@@ -222,7 +230,7 @@
     --glow-primary: 0 0 20px rgba(255, 68, 68, 0.3), 0 0 40px rgba(255, 215, 0, 0.2);
 
     --theme-font-heading: 'Orbitron', sans-serif;
-    --theme-font-body: 'Rajdhani', sans-serif;
+    --theme-font-body: 'Inter', system-ui, sans-serif;
 }
 
 /* ============================================
@@ -259,7 +267,7 @@
     --glow-primary: 0 0 20px rgba(0, 229, 204, 0.3), 0 0 40px rgba(0, 229, 204, 0.1);
 
     --theme-font-heading: 'Orbitron', sans-serif;
-    --theme-font-body: 'Rajdhani', sans-serif;
+    --theme-font-body: 'Inter', system-ui, sans-serif;
 }
 
 /* ============================================
@@ -324,7 +332,7 @@
     border-radius: var(--radius-md);
     color: var(--text-primary);
     cursor: pointer;
-    font-family: var(--theme-font-body, 'Rajdhani', sans-serif);
+    font-family: var(--theme-font-body, 'Inter', system-ui, sans-serif);
     font-size: 0.875rem;
     transition: all var(--transition-fast);
 }
@@ -409,6 +417,10 @@
 }
 
 /* Theme color previews */
+.preview-default span:nth-child(1) { background: #ffffff; }
+.preview-default span:nth-child(2) { background: #18181b; }
+.preview-default span:nth-child(3) { background: #e4e4e7; }
+
 .preview-matrix span:nth-child(1) { background: #000000; }
 .preview-matrix span:nth-child(2) { background: #00ff41; }
 .preview-matrix span:nth-child(3) { background: #003d00; }
@@ -493,7 +505,7 @@
 .theme-label {
     font-size: 0.7rem;
     color: var(--text-secondary);
-    font-family: var(--theme-font-body, 'Rajdhani', sans-serif);
+    font-family: var(--theme-font-body, 'Inter', system-ui, sans-serif);
 }
 
 .theme-card.active .theme-label {

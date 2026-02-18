@@ -255,6 +255,14 @@ export default {
         return R([]);
       }
 
+      if (pathname === '/api/messages' && method === 'GET') {
+        return R([]);
+      }
+
+      if (pathname.startsWith('/api/files')) {
+        return R([]);
+      }
+
       return E('Not found', 404);
 
     } catch (e) {

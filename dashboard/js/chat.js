@@ -325,12 +325,25 @@ function selectMention(idx) {
 // ─── View Toggle ──────────────────────────────────────────────────────────
 
 function showBoardView() {
-    document.getElementById('kanban-board-wrapper').style.display = '';
-    document.getElementById('chat-view').classList.remove('active');
-    document.getElementById('left-sidebar').style.display = '';
-    document.getElementById('right-sidebar').style.display = '';
+    const wrapper = document.getElementById('kanban-board-wrapper');
+    const chatView = document.getElementById('chat-view');
+    const leftSidebar = document.getElementById('left-sidebar');
+    const rightSidebar = document.getElementById('right-sidebar');
+
+    chatView.classList.remove('active');
+    leftSidebar.style.display = '';
+    rightSidebar.style.display = '';
+    wrapper.style.display = 'flex';
+    wrapper.style.flex = '1';
+    wrapper.style.minHeight = '0';
+    wrapper.style.overflow = 'hidden';
+
     document.getElementById('view-btn-board').classList.add('active');
     document.getElementById('view-btn-chat').classList.remove('active');
+
+    // Force reflow so height is recalculated correctly
+    wrapper.offsetHeight;
+    window.dispatchEvent(new Event('resize'));
 }
 
 function showChatView() {

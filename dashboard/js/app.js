@@ -752,12 +752,12 @@ async function deleteTask() {
         renderDashboard();
 
         hideLoading();
-        showToast(`Task "${taskTitle}" deleted`, 'success');
+        showToast('success', 'Task Deleted', `"${taskTitle}" has been removed.`);
 
     } catch (error) {
         hideLoading();
         console.error('Failed to delete task:', error);
-        showToast('Failed to delete task: ' + error.message, 'error');
+        showToast('error', 'Delete Failed', error.message);
     }
 }
 

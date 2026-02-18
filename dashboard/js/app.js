@@ -727,38 +727,70 @@ function closeModal() {
 /**
  * Delete the currently selected task
  */
-async function deleteTask() {
+function deleteTask() {
     if (!selectedTask) return;
 
-    const taskId = selectedTask.id;
     const taskTitle = selectedTask.title;
 
-    // Confirm deletion
-    if (!confirm(`Delete task "${taskTitle}"?\n\nThis cannot be undone.`)) {
-        return;
+    // Show custom confirm modal
+    showConfirmModal(
+        'Delete Task',
+        `Delete "${taskTitle}"? This cannot be undone.`,
+        'Delete',
+        async () => {
+            try {
+                showLoading('Deleting task...');
+
+                // Delete via API
+                await window.MissionControlAPI.deleteTask(selectedTask.id);
+
+                // Remove from local data
+                window.missionControlData.deleteTask(selectedTask.id);
+
+                // Close modal and re-render
+                closeModal();
+                renderDashboard();
+
+                hideLoading();
+                showToast('success', 'Task Deleted', `"${taskTitle}" has been removed.`);
+
+            } catch (error) {
+                hideLoading();
+                console.error('Failed to delete task:', error);
+                showToast('error', 'Delete Failed', error.message);
+            }
+        }
+    );
+}
+
+// ============================================
+// CONFIRM MODAL
+// ============================================
+
+let confirmCallback = null;
+
+/**
+ * Show a custom confirm modal (works in sandboxed iframes)
+ */
+function showConfirmModal(title, message, actionText, onConfirm) {
+    const modal = document.getElementById('confirm-modal');
+    document.getElementById('confirm-title').textContent = title;
+    document.getElementById('confirm-message').textContent = message;
+    document.getElementById('confirm-action-btn').textContent = actionText;
+    confirmCallback = onConfirm;
+    modal.classList.add('open');
+}
+
+/**
+ * Close confirm modal and optionally execute callback
+ */
+function closeConfirmModal(confirmed) {
+    const modal = document.getElementById('confirm-modal');
+    modal.classList.remove('open');
+    if (confirmed && confirmCallback) {
+        confirmCallback();
     }
-
-    try {
-        showLoading('Deleting task...');
-
-        // Delete via API
-        await window.MissionControlAPI.deleteTask(taskId);
-
-        // Remove from local data
-        window.missionControlData.deleteTask(taskId);
-
-        // Close modal and re-render
-        closeModal();
-        renderDashboard();
-
-        hideLoading();
-        showToast('success', 'Task Deleted', `"${taskTitle}" has been removed.`);
-
-    } catch (error) {
-        hideLoading();
-        console.error('Failed to delete task:', error);
-        showToast('error', 'Delete Failed', error.message);
-    }
+    confirmCallback = null;
 }
 
 /**

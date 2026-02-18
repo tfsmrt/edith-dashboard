@@ -1052,10 +1052,27 @@
         </div>
     </div>
 
+    <!-- Confirm Dialog Modal -->
+    <div class="modal" id="confirm-modal">
+        <div class="modal-content" style="max-width: 400px;">
+            <div class="modal-header">
+                <h2 id="confirm-title">Confirm</h2>
+                <button class="close-btn" onclick="closeConfirmModal(false)" aria-label="Close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p id="confirm-message">Are you sure?</p>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeConfirmModal(false)">Cancel</button>
+                <button class="btn btn-danger" id="confirm-action-btn" onclick="closeConfirmModal(true)">Delete</button>
+            </div>
+        </div>
+    </div>
+
     <link rel="stylesheet" href="/css/chat.css">
-    <script src="/js/api.js?v=202602180755"></script>
-    <script src="/js/data.js?v=202602180755"></script>
-    <script src="/js/app.js?v=202602180755"></script>
-    <script src="/js/chat.js?v=202602180755"></script>
+    <script src="/js/api.js?v=202602181046"></script>
+    <script src="/js/data.js?v=202602181046"></script>
+    <script src="/js/app.js?v=202602181046"></script>
+    <script src="/js/chat.js?v=202602181046"></script>
 </body>
 </html>

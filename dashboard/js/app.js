@@ -3188,7 +3188,11 @@ function loadTasksFromLocalStorage() {
         if (!saved) return false;
         const tasks = JSON.parse(saved);
         if (tasks && tasks.length > 0) {
-            window.missionControlData.tasks = tasks;
+            // Merge: localStorage tasks take priority, keep any not in localStorage
+            const localIds = new Set(tasks.map(t => t.id));
+            const sampleOnly = (window.missionControlData.tasks || [])
+                .filter(t => !localIds.has(t.id));
+            window.missionControlData.tasks = [...tasks, ...sampleOnly];
             return true;
         }
     } catch(e) { console.warn('Task load failed', e); }
@@ -3199,9 +3203,10 @@ function loadTasksFromLocalStorage() {
 const _originalLoadData = window.missionControlData.loadData.bind(window.missionControlData);
 window.missionControlData.loadData = async function() {
     const result = await _originalLoadData();
-    // If no tasks came from server, load from localStorage
-    if (this.tasks.length === 0) {
-        loadTasksFromLocalStorage();
+    // Always try localStorage — it has user-created tasks that override defaults
+    const localLoaded = loadTasksFromLocalStorage();
+    if (localLoaded) {
+        console.log('Tasks loaded from localStorage:', this.tasks.length);
     }
     return result;
 };

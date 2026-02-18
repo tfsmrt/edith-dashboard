@@ -874,7 +874,7 @@ async function initChat() {
     loadCustomChannels(); // load user-created channels
     await loadChatHistory(); // load persisted messages before rendering
     renderChannelList();
-    switchChannel('general');
+    switchChannel('general', false); // no URL push on init
     renderMembersPanel();
 }
 

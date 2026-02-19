@@ -254,6 +254,12 @@ function applyTheme(theme) {
 /**
  * Toggle dark/light theme (shadcn/ui approach)
  */
+function logout() {
+    localStorage.removeItem('edith_token');
+    localStorage.removeItem('edith_user');
+    window.location.href = '/login.html';
+}
+
 function toggleTheme() {
     const isDark = document.documentElement.classList.toggle('dark');
     const theme = isDark ? 'dark' : 'light';

@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>E.D.I.T.H — Login</title>
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
+    <style>
+        :root {
+            --bg: #09090b;
+            --card: #18181b;
+            --border: #27272a;
+            --text: #fafafa;
+            --muted: #a1a1aa;
+            --primary: #3b82f6;
+            --primary-hover: #2563eb;
+            --error: #ef4444;
+            --radius: 12px;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Inter', -apple-system, system-ui, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .login-container {
+            width: 100%;
+            max-width: 400px;
+            padding: 24px;
+        }
+        .login-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 32px;
+        }
+        .login-header {
+            text-align: center;
+            margin-bottom: 28px;
+        }
+        .login-logo {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 8px;
+        }
+        .login-logo img { width: 28px; height: 28px; border-radius: 6px; }
+        .login-logo span { font-size: 1.25rem; font-weight: 700; letter-spacing: -0.02em; }
+        .login-subtitle { font-size: 0.85rem; color: var(--muted); }
+        .form-group { margin-bottom: 16px; }
+        .form-label {
+            display: block;
+            font-size: 0.8rem;
+            font-weight: 500;
+            color: var(--text);
+            margin-bottom: 6px;
+        }
+        .form-input {
+            width: 100%;
+            padding: 10px 14px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            background: var(--bg);
+            color: var(--text);
+            font-size: 0.875rem;
+            font-family: inherit;
+            outline: none;
+            transition: border-color 0.15s;
+        }
+        .form-input:focus { border-color: var(--primary); }
+        .form-input::placeholder { color: var(--muted); }
+        .login-btn {
+            width: 100%;
+            padding: 10px;
+            border-radius: 8px;
+            border: none;
+            background: var(--primary);
+            color: white;
+            font-size: 0.875rem;
+            font-weight: 600;
+            font-family: inherit;
+            cursor: pointer;
+            transition: background 0.15s;
+            margin-top: 4px;
+        }
+        .login-btn:hover { background: var(--primary-hover); }
+        .login-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+        .error-msg {
+            display: none;
+            color: var(--error);
+            font-size: 0.78rem;
+            text-align: center;
+            margin-top: 12px;
+        }
+        .error-msg.show { display: block; }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <div class="login-card">
+            <div class="login-header">
+                <div class="login-logo">
+                    <img src="favicon-32.png" alt="E.D.I.T.H">
+                    <span>E.D.I.T.H</span>
+                </div>
+                <p class="login-subtitle">Sign in to Mission Control</p>
+            </div>
+            <form id="login-form" onsubmit="handleLogin(event)">
+                <div class="form-group">
+                    <label class="form-label" for="username">Username</label>
+                    <input class="form-input" type="text" id="username" placeholder="Enter username" autocomplete="username" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="password">Password</label>
+                    <input class="form-input" type="password" id="password" placeholder="Enter password" autocomplete="current-password" required>
+                </div>
+                <button class="login-btn" type="submit" id="login-btn">Sign in</button>
+                <p class="error-msg" id="error-msg"></p>
+            </form>
+        </div>
+    </div>
+    <script>
+        // Check if already logged in
+        const token = localStorage.getItem('edith_token');
+        if (token) {
+            fetch('/api/auth/verify', {
+                headers: { 'Authorization': 'Bearer ' + token }
+            }).then(r => {
+                if (r.ok) window.location.href = '/';
+            });
+        }
+
+        async function handleLogin(e) {
+            e.preventDefault();
+            const btn = document.getElementById('login-btn');
+            const err = document.getElementById('error-msg');
+            btn.disabled = true;
+            err.classList.remove('show');
+
+            try {
+                const res = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        username: document.getElementById('username').value,
+                        password: document.getElementById('password').value
+                    })
+                });
+                const data = await res.json();
+                if (res.ok && data.token) {
+                    localStorage.setItem('edith_token', data.token);
+                    localStorage.setItem('edith_user', JSON.stringify(data.user));
+                    window.location.href = '/';
+                } else {
+                    err.textContent = data.error || 'Invalid credentials';
+                    err.classList.add('show');
+                }
+            } catch {
+                err.textContent = 'Connection error. Try again.';
+                err.classList.add('show');
+            }
+            btn.disabled = false;
+        }
+    </script>
+</body>
+</html>

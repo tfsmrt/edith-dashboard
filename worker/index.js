@@ -28,6 +28,44 @@ const CORS = {
   'Access-Control-Allow-Headers': 'Content-Type, Authorization',
 };
 
+// ── Auth helpers ──────────────────────────────────────────────────────────────
+
+const AUTH_SECRET = 'edith-dashboard-2026'; // Used for simple token signing
+
+async function hashPassword(password) {
+  const encoder = new TextEncoder();
+  const data = encoder.encode(password + AUTH_SECRET);
+  const hash = await crypto.subtle.digest('SHA-256', data);
+  return Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+async function createToken(user) {
+  const payload = { id: user.id, name: user.name, role: user.role, exp: Date.now() + 86400000 }; // 24h
+  const encoder = new TextEncoder();
+  const data = encoder.encode(JSON.stringify(payload) + AUTH_SECRET);
+  const hash = await crypto.subtle.digest('SHA-256', data);
+  const sig = Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2, '0')).join('').slice(0, 16);
+  return btoa(JSON.stringify(payload)) + '.' + sig;
+}
+
+async function verifyToken(token) {
+  try {
+    const [payloadB64, sig] = token.split('.');
+    const payload = JSON.parse(atob(payloadB64));
+    if (payload.exp < Date.now()) return null;
+    const encoder = new TextEncoder();
+    const data = encoder.encode(JSON.stringify(payload) + AUTH_SECRET);
+    const hash = await crypto.subtle.digest('SHA-256', data);
+    const expectedSig = Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2, '0')).join('').slice(0, 16);
+    return sig === expectedSig ? payload : null;
+  } catch { return null; }
+}
+
+async function getUser(kv, username) {
+  const raw = await kv.get(`auth:${username}`);
+  return raw ? JSON.parse(raw) : null;
+}
+
 const R = (data, status = 200) =>
   new Response(JSON.stringify(data), {
     status,
@@ -120,6 +158,39 @@ export default {
       // ── Health
       if (pathname === '/health') {
         return R({ ok: true, ts: new Date().toISOString(), storage: 'kv' });
+      }
+
+      // ── Auth: POST /api/auth/login
+      if (pathname === '/api/auth/login' && method === 'POST') {
+        const { username, password } = await request.json();
+        if (!username || !password) return E('Username and password required');
+        const user = await getUser(kv, username.toLowerCase());
+        if (!user) return E('Invalid credentials', 401);
+        const hash = await hashPassword(password);
+        if (hash !== user.passwordHash) return E('Invalid credentials', 401);
+        const token = await createToken(user);
+        return R({ token, user: { id: user.id, name: user.name, role: user.role, avatar: user.avatar } });
+      }
+
+      // ── Auth: GET /api/auth/verify
+      if (pathname === '/api/auth/verify' && method === 'GET') {
+        const authHeader = request.headers.get('Authorization');
+        if (!authHeader || !authHeader.startsWith('Bearer ')) return E('No token', 401);
+        const payload = await verifyToken(authHeader.slice(7));
+        if (!payload) return E('Invalid or expired token', 401);
+        return R({ valid: true, user: payload });
+      }
+
+      // ── Auth: POST /api/auth/register (admin only — create user)
+      if (pathname === '/api/auth/register' && method === 'POST') {
+        const { username, password, name, role, id, avatar } = await request.json();
+        if (!username || !password) return E('Username and password required');
+        const existing = await getUser(kv, username.toLowerCase());
+        if (existing) return E('User already exists', 409);
+        const hash = await hashPassword(password);
+        const user = { id: id || `human-${username.toLowerCase()}`, name: name || username, role: role || 'observer', avatar: avatar || null, passwordHash: hash };
+        await kv.put(`auth:${username.toLowerCase()}`, JSON.stringify(user));
+        return R({ success: true, user: { id: user.id, name: user.name, role: user.role } }, 201);
       }
 
       // ── GET /api/tasks

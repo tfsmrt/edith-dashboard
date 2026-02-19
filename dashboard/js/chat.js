@@ -860,8 +860,20 @@ async function initChat() {
     loadCustomChannels(); // load user-created channels
     await loadChatHistory(); // load persisted messages before rendering
     renderChannelList();
-    switchChannel('general', false); // no URL push on init
     renderMembersPanel();
+
+    // Route based on current URL instead of always defaulting to general
+    const path = window.location.pathname;
+    const dmMatch = path.match(/^\/chat\/user\/([\w-]+)$/);
+    const channelMatch = path.match(/^\/chat\/channel\/([\w-]+)$/);
+    if (dmMatch) {
+        switchChannel('general', false); // init base state
+        openDM(dmMatch[1], false);
+    } else if (channelMatch) {
+        switchChannel(channelMatch[1], false);
+    } else {
+        switchChannel('general', false);
+    }
 }
 
 // ─── URL Router ───────────────────────────────────────────────────────────────

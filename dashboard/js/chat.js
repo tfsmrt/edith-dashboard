@@ -695,9 +695,16 @@ async function loadChatHistory() {
         for (const ch of channels) {
             const res = await fetch(`/api/chat/${ch}`);
             if (res.ok) {
-                const msgs = await res.json();
-                if (msgs && msgs.length > 0) {
-                    window.chatMessages[ch] = msgs;
+                const apiMsgs = await res.json();
+                if (apiMsgs && apiMsgs.length > 0) {
+                    // Merge: use API messages as base, add any sample messages not already present
+                    const existingIds = new Set(apiMsgs.map(m => m.id));
+                    const sampleMsgs = (window.chatMessages[ch] || []).filter(m => !existingIds.has(m.id));
+                    // Combine sample + API, sort by timestamp
+                    const merged = [...sampleMsgs, ...apiMsgs].sort((a, b) => 
+                        new Date(a.ts).getTime() - new Date(b.ts).getTime()
+                    );
+                    window.chatMessages[ch] = merged;
                     loaded = true;
                 }
             }

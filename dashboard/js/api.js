@@ -522,3 +522,4 @@ const MissionControlAPI = {
 
 // Initialize and make globally available
 window.MissionControlAPI = MissionControlAPI.init();
+

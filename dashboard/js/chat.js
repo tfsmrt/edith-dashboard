@@ -691,6 +691,14 @@ async function saveChatHistory(channel, message) {
 async function loadChatHistory() {
     try {
         const channels = (window.chatChannels || []).map(c => c.id);
+        // Also load DM channels for all agents
+        const data = window.missionControlData;
+        if (data) {
+            (data.getAgents() || []).forEach(a => {
+                const dmKey = `dm-${a.id}`;
+                if (!channels.includes(dmKey)) channels.push(dmKey);
+            });
+        }
         let loaded = false;
         for (const ch of channels) {
             const res = await fetch(`/api/chat/${ch}`);

@@ -1298,7 +1298,7 @@ function openAgentProfile(agentId) {
         avatarImg.style.display = 'none';
         avatarFallback.style.display = 'flex';
         avatarFallback.textContent = getInitials(agent.name);
-        avatarFallback.className = `profile-avatar-fallback ${agent.role}`;
+        avatarFallback.className = `pp-avatar-fallback ${agent.role}`;
     }
 
     // Name & designation
@@ -1308,13 +1308,13 @@ function openAgentProfile(agentId) {
     // Role badge
     const roleBadge = document.getElementById('profile-role-badge');
     roleBadge.textContent = capitalizeFirst(agent.role);
-    roleBadge.className = `role-badge ${agent.role}`;
+    roleBadge.className = `pp-badge ${agent.role}`;
 
     // Status
     const statusDot = document.getElementById('profile-status-dot');
     const statusText = document.getElementById('profile-status-text');
     const statusMap = { active: 'ACTIVE', busy: 'WORKING', idle: 'IDLE', offline: 'OFFLINE' };
-    statusDot.className = `profile-status-dot ${agent.status}`;
+    statusDot.className = `pp-status-dot ${agent.status}`;
     statusText.textContent = statusMap[agent.status] || agent.status.toUpperCase();
 
     // Personality / About (Feature 2)

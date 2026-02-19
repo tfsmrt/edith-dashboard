@@ -338,8 +338,22 @@ class MissionControlData {
             ]);
             if (tasks !== null) {
                 this.tasks = tasks;
-                this.agents = agents || [];
-                this.humans = humans || [];
+                // Merge API agents with SAMPLE_AGENTS (API may have fewer fields)
+                if (agents && agents.length > 0) {
+                    const sampleMap = {};
+                    SAMPLE_AGENTS.forEach(a => sampleMap[a.id] = a);
+                    this.agents = agents.map(a => ({ ...sampleMap[a.id], ...a }));
+                } else {
+                    this.agents = [...SAMPLE_AGENTS];
+                }
+                // Merge API humans with SAMPLE_HUMANS
+                if (humans && humans.length > 0) {
+                    const humanMap = {};
+                    SAMPLE_HUMANS.forEach(h => humanMap[h.id] = h);
+                    this.humans = humans.map(h => ({ ...humanMap[h.id], ...h }));
+                } else {
+                    this.humans = [...SAMPLE_HUMANS];
+                }
                 this.queue = (queue && queue.length > 0) ? queue : [...SAMPLE_QUEUE];
                 try {
                     const messages = await window.MissionControlAPI.getMessages();

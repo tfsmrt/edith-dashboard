@@ -45,22 +45,22 @@
                 <span></span>
             </button>
             <a href="/" class="logo" style="text-decoration:none;cursor:pointer" title="Go to homepage">
-                <span class="logo-icon">E</span>
-                E.D.I.T.H
+                <img src="favicon-32.png" alt="Edith" class="logo-icon-img" width="22" height="22">
+                Edith
             </a>
-        </div>
-        <div class="header-right">
-            <!-- View Toggle -->
-            <div class="view-toggle">
-                <button class="view-toggle-btn active" id="view-btn-board" onclick="showBoardView()">
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+            <!-- View Toggle Group -->
+            <div class="view-toggle-group" role="group">
+                <button class="toggle-group-item active" id="view-btn-board" onclick="showBoardView()" aria-pressed="true">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
                     Board
                 </button>
-                <button class="view-toggle-btn" id="view-btn-chat" onclick="showChatView()">
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+                <button class="toggle-group-item" id="view-btn-chat" onclick="showChatView()" aria-pressed="false">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
                     Chat
                 </button>
             </div>
+        </div>
+        <div class="header-right">
             <!-- Theme Toggle Button -->
             <button id="theme-toggle" onclick="toggleTheme()" aria-label="Toggle dark/light mode" title="Toggle dark/light mode">🌙</button>
             <div class="metrics">

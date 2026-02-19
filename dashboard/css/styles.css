@@ -300,22 +300,57 @@ body::after {
 }
 
 .logo-icon {
+    display: none;
+}
+
+.logo-icon-img {
     display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 36px;
-    height: 36px;
-    background: hsl(var(--primary));
-    border-radius: var(--radius-md);
-    font-family: 'Inter', system-ui, sans-serif;
-    font-weight: 800;
-    font-size: 1rem;
-    color: hsl(var(--primary-foreground));
-    position: relative;
+    width: 22px;
+    height: 22px;
+    border-radius: 4px;
 }
 
 .logo-icon::before {
     display: none;
+}
+
+/* Toggle Group (shadcn-style) */
+.view-toggle-group {
+    display: inline-flex;
+    align-items: center;
+    border-radius: 8px;
+    border: 1px solid hsl(var(--border));
+    background: hsl(var(--muted));
+    padding: 2px;
+    gap: 0;
+    margin-left: 16px;
+}
+
+.toggle-group-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 14px;
+    border-radius: 6px;
+    border: none;
+    background: transparent;
+    color: hsl(var(--muted-foreground));
+    font-size: 0.8rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    font-family: inherit;
+    line-height: 1;
+}
+
+.toggle-group-item:hover {
+    color: hsl(var(--foreground));
+}
+
+.toggle-group-item.active {
+    background: hsl(var(--background));
+    color: hsl(var(--foreground));
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
 }
 
 .version {

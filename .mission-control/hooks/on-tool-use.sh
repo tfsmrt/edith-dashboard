@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# JARVIS Mission Control - OpenClaw Hook: Tool Use
+# Edith Dashboard - OpenClaw Hook: Tool Use
 # Called when an OpenClaw agent uses a tool
 #
 # Environment variables (set by OpenClaw):

@@ -1,6 +1,6 @@
 # Mission Control Skill for AI Agents
 
-This skill teaches AI agents how to interact with JARVIS Mission Control.
+This skill teaches AI agents how to interact with Edith Dashboard.
 
 ## Quick Reference
 
@@ -26,7 +26,7 @@ ls .mission-control/tasks/
 # Or use the script
 ./scripts/list-tasks.sh
 ./scripts/list-tasks.sh --status IN_PROGRESS
-./scripts/list-tasks.sh --assignee agent-jarvis
+./scripts/list-tasks.sh --assignee agent-edith
 ```
 
 ### 2. Read a Task
@@ -274,7 +274,7 @@ POST /api/agents             # Register agent
 
 View the visual dashboard at:
 ```
-https://YOUR-ORG.github.io/JARVIS-Mission-Control-OpenClaw/dashboard/
+https://YOUR-ORG.github.io/Edith-Mission-Control-OpenClaw/dashboard/
 ```
 
 ## Example: Complete Workflow

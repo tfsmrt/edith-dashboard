@@ -480,7 +480,7 @@ const AGENT_REPLIES = {
     'agent-tony': [
         "Already running the analysis. Give me 3 minutes.",
         "I've seen worse problems. This is fixable.",
-        "JARVIS flagged this earlier. I've got a solution in progress.",
+        "Edith flagged this earlier. I've got a solution in progress.",
         "On it. Estimated completion: 47 minutes. Maybe less.",
         "You're talking to the right person. What's the spec?",
         "I don't do impossible. I do 'hasn't been done yet'."

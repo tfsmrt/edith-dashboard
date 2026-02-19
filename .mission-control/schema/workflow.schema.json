@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://jarvis-mission-control.dev/schemas/workflow.json",
+  "$id": "https://edith-mission-control.dev/schemas/workflow.json",
   "title": "Workflow",
   "description": "A multi-stage workflow in the Mission Control system",
   "type": "object",

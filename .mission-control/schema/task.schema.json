@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://jarvis-mission-control.dev/schemas/task.json",
+  "$id": "https://edith-mission-control.dev/schemas/task.json",
   "title": "Task",
   "description": "A task in the Mission Control system",
   "type": "object",

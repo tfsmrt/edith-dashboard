@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# JARVIS Mission Control - OpenClaw Hook: Agent Start
+# Edith Dashboard - OpenClaw Hook: Agent Start
 # Called when an OpenClaw agent session starts
 #
 # Environment variables (set by OpenClaw):

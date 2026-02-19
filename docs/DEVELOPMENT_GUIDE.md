@@ -1,6 +1,6 @@
 # Development Guide
 
-This guide covers how to contribute to JARVIS Mission Control - for both humans and AI agents.
+This guide covers how to contribute to Edith Dashboard - for both humans and AI agents.
 
 ## Table of Contents
 
@@ -17,7 +17,7 @@ This guide covers how to contribute to JARVIS Mission Control - for both humans 
 
 ## Project Overview
 
-JARVIS Mission Control is a **Git-based** task management and agent orchestration system. All data is stored as JSON/YAML files in the repository - no external database required.
+Edith Dashboard is a **Git-based** task management and agent orchestration system. All data is stored as JSON/YAML files in the repository - no external database required.
 
 ### Key Principles
 
@@ -69,8 +69,8 @@ JARVIS Mission Control is a **Git-based** task management and agent orchestratio
 
 ```bash
 # Clone the repository
-git clone https://github.com/your-org/JARVIS-Mission-Control-OpenClaw.git
-cd JARVIS-Mission-Control-OpenClaw
+git clone https://github.com/your-org/Edith-Mission-Control-OpenClaw.git
+cd Edith-Mission-Control-OpenClaw
 
 # Make scripts executable
 chmod +x scripts/*.sh
@@ -103,7 +103,7 @@ Tasks are stored as individual JSON files in `.mission-control/tasks/`:
   "status": "IN_PROGRESS",
   "priority": "high",
   "assignee": "agent-backend-specialist",
-  "created_by": "agent-jarvis",
+  "created_by": "agent-edith",
   "created_at": "2026-02-05T10:00:00Z",
   "updated_at": "2026-02-05T14:30:00Z",
   "due_date": "2026-02-10T00:00:00Z",
@@ -113,7 +113,7 @@ Tasks are stored as individual JSON files in `.mission-control/tasks/`:
   "comments": [
     {
       "id": "comment-001",
-      "author": "agent-jarvis",
+      "author": "agent-edith",
       "content": "This is a critical feature for the v2.0 release",
       "timestamp": "2026-02-05T10:00:00Z",
       "type": "progress"
@@ -198,7 +198,7 @@ Workflows define multi-step processes in `.mission-control/workflows/`:
       "required_approval": true
     }
   ],
-  "created_by": "agent-jarvis",
+  "created_by": "agent-edith",
   "created_at": "2026-02-01T00:00:00Z"
 }
 ```
@@ -251,7 +251,7 @@ Actions:
 - Unblocked task
 
 Examples:
-[agent:jarvis] Created task: Implement dashboard metrics
+[agent:edith] Created task: Implement dashboard metrics
 [agent:backend-specialist] Completed task: Add OAuth2 flow
 [human:admin] Approved task: Security audit
 ```
@@ -385,17 +385,17 @@ cat .mission-control/logs/activity.log | grep "agent-backend-specialist"
 {
   "comments": [
     {
-      "author": "agent-jarvis",
+      "author": "agent-edith",
       "content": "@agent-backend-specialist Please review the API design before implementation",
       "type": "progress"
     },
     {
       "author": "agent-backend-specialist",
-      "content": "@agent-jarvis Reviewed. I suggest using GraphQL instead of REST for flexibility.",
+      "content": "@agent-edith Reviewed. I suggest using GraphQL instead of REST for flexibility.",
       "type": "refute"
     },
     {
-      "author": "agent-jarvis",
+      "author": "agent-edith",
       "content": "@agent-backend-specialist Good point. Approved. Please proceed with GraphQL.",
       "type": "approval"
     }
@@ -410,11 +410,11 @@ Create message files in `.mission-control/messages/`:
 ```json
 {
   "id": "msg-20260205-001",
-  "from": "agent-jarvis",
+  "from": "agent-edith",
   "to": "agent-backend-specialist",
   "content": "How's the API implementation going?",
   "timestamp": "2026-02-05T12:00:00Z",
-  "thread_id": "thread-jarvis-backend",
+  "thread_id": "thread-edith-backend",
   "read": false,
   "type": "direct"
 }

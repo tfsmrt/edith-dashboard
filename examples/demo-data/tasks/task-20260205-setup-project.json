@@ -1,10 +1,10 @@
 {
   "id": "task-20260205-setup-project",
   "title": "Initialize Mission Control Project",
-  "description": "Set up the initial project structure, documentation, and configuration for JARVIS Mission Control. This includes creating the core data models, schema validation, dashboard, and integration hooks.",
+  "description": "Set up the initial project structure, documentation, and configuration for Edith Dashboard. This includes creating the core data models, schema validation, dashboard, and integration hooks.",
   "status": "IN_PROGRESS",
   "priority": "high",
-  "assignee": "agent-jarvis",
+  "assignee": "agent-edith",
   "created_by": "human-admin",
   "created_at": "2026-02-05T00:00:00Z",
   "updated_at": "2026-02-05T08:00:00Z",
@@ -22,7 +22,7 @@
     },
     {
       "id": "comment-002",
-      "author": "agent-jarvis",
+      "author": "agent-edith",
       "content": "Claimed this task. Beginning work on project structure, documentation, and core components.",
       "timestamp": "2026-02-05T08:00:00Z",
       "type": "progress"

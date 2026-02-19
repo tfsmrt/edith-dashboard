@@ -1,4 +1,4 @@
-# JARVIS Mission Control v0.8.0 - Feature Proposal
+# Edith Dashboard v0.8.0 - Feature Proposal
 
 > **Date**: 2026-02-05
 > **Author**: agent-architect
@@ -9,7 +9,7 @@
 
 ## Context
 
-Currently JARVIS Mission Control is a Kanban-centric dashboard. You see task columns, agent names in a sidebar, and scheduled jobs. But you can't **click into an agent** and see who they are, what they're working on, what needs their attention, or how they've been communicating with other agents.
+Currently Edith Dashboard is a Kanban-centric dashboard. You see task columns, agent names in a sidebar, and scheduled jobs. But you can't **click into an agent** and see who they are, what they're working on, what needs their attention, or how they've been communicating with other agents.
 
 The screenshot from the reference video shows what the next level looks like: an **Agent Profile Page** where each agent has a personality, skills, an attention feed, a timeline of their activity, and a messages view showing inter-agent conversations. The user can also chat directly from the dashboard.
 
@@ -50,7 +50,7 @@ This proposal breaks that vision into **10 independent features** you can pick f
 **UI Reference** (from screenshot):
 ```
 ┌─────────────────────────────────┐
-│  [Avatar]  JARVIS               │
+│  [Avatar]  Edith               │
 │  Squad Lead                     │
 │  ┌──────┐                       │
 │  │ Lead │                       │
@@ -109,7 +109,7 @@ This proposal breaks that vision into **10 independent features** you can pick f
 - Update agent JSON schema in `.mission-control/schema/`
 - Add `personality` field to all existing agent JSON files
 - Profile panel (Feature 1) renders the `about` text and traits
-- Write personality descriptions for: Architect, Neo, Trinity, JARVIS
+- Write personality descriptions for: Architect, Neo, Trinity, Edith
 
 **Changes**: `.mission-control/agents/*.json`, `.mission-control/schema/agent.schema.json`
 
@@ -159,7 +159,7 @@ SKILLS
 🔴 CRITICAL  "Neural Interface Breach" assigned to you
    2 hours ago
 
-💬 MENTION   @jarvis review needed on Matrix Core
+💬 MENTION   @edith review needed on Matrix Core
    by agent-neo · 4 hours ago
 
 📋 ASSIGNED  "Implement Real-time Sync" waiting
@@ -307,8 +307,8 @@ Trinity (12:15): Confirmed. Patching now.
 ```
 ┌─── Mission Control Chat ──────────────────────┐
 │                                                │
-│  Asif (10:00): @jarvis what's the status?     │
-│  JARVIS (10:01): All systems operational.      │
+│  Asif (10:00): @edith what's the status?     │
+│  Edith (10:01): All systems operational.      │
 │    3 tasks in progress, 0 blocked.             │
 │  Asif (10:02): @neo how's the core upgrade?   │
 │  Neo (10:03): 80% complete. ETA: 2 hours.     │

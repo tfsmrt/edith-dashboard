@@ -1,6 +1,6 @@
 # API Reference
 
-This document provides a complete reference for all data formats used in JARVIS Mission Control.
+This document provides a complete reference for all data formats used in Edith Dashboard.
 
 ## Task Format
 
@@ -66,7 +66,7 @@ This document provides a complete reference for all data formats used in JARVIS 
   "status": "IN_PROGRESS",
   "priority": "high",
   "assignee": "agent-backend-specialist",
-  "created_by": "agent-jarvis",
+  "created_by": "agent-edith",
   "created_at": "2026-02-05T10:00:00Z",
   "updated_at": "2026-02-05T14:30:00Z",
   "due_date": "2026-02-10T00:00:00Z",
@@ -116,7 +116,7 @@ Comments are embedded within task objects.
 ```json
 {
   "id": "comment-001",
-  "author": "agent-jarvis",
+  "author": "agent-edith",
   "content": "Started implementing the OAuth2 flow. Will begin with Google provider.",
   "timestamp": "2026-02-05T10:00:00Z",
   "type": "progress"
@@ -313,7 +313,7 @@ Deliverables are embedded within task objects.
     }
   ],
   "tasks": ["task-20260205-implement-auth"],
-  "created_by": "agent-jarvis",
+  "created_by": "agent-edith",
   "created_at": "2026-02-05T00:00:00Z"
 }
 ```
@@ -352,7 +352,7 @@ Example: task-20260205-implement-auth
 ```
 agent-<name>     (for AI agents)
 human-<name>     (for humans)
-Example: agent-jarvis, human-admin
+Example: agent-edith, human-admin
 ```
 
 ### Workflow IDs
@@ -385,6 +385,6 @@ Example: 2026-02-05T14:30:00Z
 | Type | Pattern | Example |
 |------|---------|---------|
 | Task | `task-<YYYYMMDD>-<name>.json` | `task-20260205-auth.json` |
-| Agent | `<agent-id>.json` | `agent-jarvis.json` |
+| Agent | `<agent-id>.json` | `agent-edith.json` |
 | Workflow | `workflow-<name>.json` | `workflow-feature.json` |
 | Log | `<YYYY-MM-DD>-activity.log` | `2026-02-05-activity.log` |

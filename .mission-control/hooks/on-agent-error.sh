@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# JARVIS Mission Control - OpenClaw Hook: Agent Error
+# Edith Dashboard - OpenClaw Hook: Agent Error
 # Called when an OpenClaw agent session encounters an error
 #
 # Environment variables (set by OpenClaw):

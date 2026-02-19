@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# JARVIS Mission Control - Validation Script
+# Edith Dashboard - Validation Script
 # Validates all data files against their JSON schemas
 #
 # Usage: ./scripts/validate.sh [file]
@@ -286,7 +286,7 @@ validate_file() {
 }
 
 # Main
-echo "JARVIS Mission Control - Data Validation"
+echo "Edith Dashboard - Data Validation"
 echo "========================================"
 echo ""
 

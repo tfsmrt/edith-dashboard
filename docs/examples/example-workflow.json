@@ -17,7 +17,7 @@
       ],
       "tasks": [],
       "required_approval": true,
-      "approver": "agent-jarvis",
+      "approver": "agent-edith",
       "started_at": null,
       "completed_at": null
     },
@@ -71,7 +71,7 @@
     }
   ],
   "tasks": [],
-  "created_by": "agent-jarvis",
+  "created_by": "agent-edith",
   "created_at": "2026-02-05T00:00:00Z",
   "updated_at": null,
   "completed_at": null,

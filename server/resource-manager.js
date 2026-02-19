@@ -1,5 +1,5 @@
 /**
- * JARVIS Mission Control - Resource Manager
+ * Edith Dashboard - Resource Manager
  * 
  * Comprehensive resource management including:
  * - Resources (APIs, compute, services, tools)

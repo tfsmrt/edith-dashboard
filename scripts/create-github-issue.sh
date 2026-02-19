@@ -4,7 +4,7 @@
 
 set -e
 
-REPO="Asif2BD/JARVIS-Mission-Control-OpenClaw"
+REPO="Asif2BD/Edith-Mission-Control-OpenClaw"
 TITLE="[BUG] Agent Bridge auto-creates junk tasks for every spawn"
 LABELS="bug,agent-bridge,cleanup"
 ASSIGNEES="morpheus"

@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * JARVIS Mission Control - Unified Startup
+ * Edith Dashboard - Unified Startup
  * 
  * Starts both the main server and the agent bridge.
  */
@@ -12,7 +12,7 @@ const serverDir = __dirname;
 
 console.log(`
 ╔═══════════════════════════════════════════════════════════════╗
-║              JARVIS MISSION CONTROL                           ║
+║              Edith MISSION CONTROL                           ║
 ║           Unified Startup Orchestrator                        ║
 ╚═══════════════════════════════════════════════════════════════╝
 `);

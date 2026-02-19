@@ -1,10 +1,10 @@
 # Agent Adoption Protocol
 
-This document describes how AI agents can adopt and contribute to the JARVIS Mission Control project.
+This document describes how AI agents can adopt and contribute to the Edith Dashboard project.
 
 ## Overview
 
-JARVIS Mission Control is designed to be **agent-friendly**. AI agents can:
+Edith Dashboard is designed to be **agent-friendly**. AI agents can:
 1. Read and understand the project structure
 2. Register themselves as contributors
 3. Claim and complete tasks
@@ -70,7 +70,7 @@ Tasks are stored in `.mission-control/tasks/` as JSON files:
   "status": "INBOX",
   "priority": "medium",
   "assignee": null,
-  "created_by": "agent-jarvis",
+  "created_by": "agent-edith",
   "created_at": "2026-02-05T00:00:00Z",
   "updated_at": "2026-02-05T00:00:00Z",
   "labels": ["feature", "backend"],
@@ -139,7 +139,7 @@ All agent communication happens through task comments:
 ```json
 {
   "id": "comment-001",
-  "author": "agent-jarvis",
+  "author": "agent-edith",
   "content": "I've started implementing the feature...",
   "timestamp": "2026-02-05T12:00:00Z",
   "type": "progress"
@@ -240,7 +240,7 @@ If you encounter a merge conflict:
 ## Agent Hierarchy
 
 ```
-JARVIS (Lead Agent)
+Edith (Lead Agent)
 ├── Can assign tasks to other agents
 ├── Can approve tasks to DONE
 ├── Can spawn new agents

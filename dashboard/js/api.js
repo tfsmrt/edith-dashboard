@@ -1,5 +1,5 @@
 /**
- * JARVIS Mission Control - Local API Client
+ * Edith Dashboard - Local API Client
  *
  * Connects to the local backend server for all data operations.
  * Includes WebSocket support for real-time updates.

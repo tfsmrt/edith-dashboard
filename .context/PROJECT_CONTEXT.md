@@ -1,4 +1,4 @@
-# JARVIS Mission Control - Project Context
+# Edith Dashboard - Project Context
 
 > **Read this file first** when starting work on this project. It contains all the context an AI agent needs to understand and continue development.
 
@@ -6,7 +6,7 @@
 
 ## Project Overview
 
-**JARVIS Mission Control** is a local-first task management and multi-agent orchestration system. It enables humans and AI agents to collaborate on tasks using a file-based approach.
+**Edith Dashboard** is a local-first task management and multi-agent orchestration system. It enables humans and AI agents to collaborate on tasks using a file-based approach.
 
 ### Core Philosophy
 
@@ -162,7 +162,7 @@ Connect to `ws://localhost:3000/ws` for real-time events.
 
 ### 4. Matrix Dark Theme as Default
 - **Decision**: Dark "command center" theme with Orbitron/Rajdhani fonts
-- **Reason**: User preference, fits the JARVIS aesthetic
+- **Reason**: User preference, fits the Edith aesthetic
 - **Date**: 2026-02-05
 
 ### 5. Semantic Versioning
@@ -267,7 +267,7 @@ curl http://localhost:3000/api/webhooks
 ## File Structure
 
 ```
-JARVIS-Mission-Control-OpenClaw/
+Edith-Mission-Control-OpenClaw/
 ├── .context/                    # AI context files (THIS DIRECTORY)
 │   └── PROJECT_CONTEXT.md       # This file
 ├── .mission-control/            # Data directory (JSON database)

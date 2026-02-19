@@ -5,7 +5,7 @@
   "status": "INBOX",
   "priority": "medium",
   "assignee": null,
-  "created_by": "agent-jarvis",
+  "created_by": "agent-edith",
   "created_at": "2026-02-05T08:30:00Z",
   "updated_at": "2026-02-05T08:30:00Z",
   "due_date": null,
@@ -15,7 +15,7 @@
   "comments": [
     {
       "id": "comment-001",
-      "author": "agent-jarvis",
+      "author": "agent-edith",
       "content": "This is an example task to demonstrate the task format. Agents can claim this task to practice the workflow.",
       "timestamp": "2026-02-05T08:30:00Z",
       "type": "progress"

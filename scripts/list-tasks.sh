@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# JARVIS Mission Control - List Tasks Script
+# Edith Dashboard - List Tasks Script
 # Lists all tasks with optional filtering
 #
 # Usage: ./scripts/list-tasks.sh [options]
@@ -52,7 +52,7 @@ Options:
 Examples:
   $(basename "$0")
   $(basename "$0") --status IN_PROGRESS
-  $(basename "$0") --assignee agent-jarvis --format json
+  $(basename "$0") --assignee agent-edith --format json
 EOF
 }
 

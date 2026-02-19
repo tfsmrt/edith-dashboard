@@ -1,11 +1,11 @@
 {
-  "id": "agent-jarvis",
-  "name": "JARVIS",
+  "id": "agent-edith",
+  "name": "Edith",
   "type": "ai",
   "role": "lead",
   "designation": "Squad Lead",
   "model": "claude-opus-4",
-  "avatar": "https://api.dicebear.com/7.x/bottts-neutral/svg?seed=jarvis&backgroundColor=fbbf24",
+  "avatar": "https://api.dicebear.com/7.x/bottts-neutral/svg?seed=edith&backgroundColor=fbbf24",
   "status": "active",
   "capabilities": [
     "orchestration",
@@ -21,8 +21,8 @@
   "channels": [
     {
       "type": "telegram",
-      "id": "@jarvis_mc_bot",
-      "chat_id": "bot_jarvis",
+      "id": "@edith_mc_bot",
+      "chat_id": "bot_edith",
       "notifications": ["task.created", "task.assigned", "task.completed", "agent.mentioned"]
     }
   ],
@@ -35,7 +35,7 @@
   "metadata": {
     "description": "Lead orchestration agent for Mission Control. Coordinates other agents, creates tasks, and manages workflows.",
     "owner": "human-admin",
-    "session_id": "mc:jarvis-001",
+    "session_id": "mc:edith-001",
     "clearance": "OMEGA"
   },
   "config": {

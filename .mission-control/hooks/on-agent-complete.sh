@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# JARVIS Mission Control - OpenClaw Hook: Agent Complete
+# Edith Dashboard - OpenClaw Hook: Agent Complete
 # Called when an OpenClaw agent session completes successfully
 #
 # Environment variables (set by OpenClaw):

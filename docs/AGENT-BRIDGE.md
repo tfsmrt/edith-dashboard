@@ -107,7 +107,7 @@ pm2 start agent-bridge.js --name "mc-bridge"
 
 # Using systemd (create /etc/systemd/system/mc-bridge.service)
 [Unit]
-Description=JARVIS Mission Control Agent Bridge
+Description=Edith Dashboard Agent Bridge
 After=network.target
 
 [Service]

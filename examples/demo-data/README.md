@@ -30,7 +30,7 @@ Browse these files to understand the JSON schema, then create your own:
 
 ## Contents
 
-- **8 agents**: Matrix-themed demo agents (Architect, Jarvis, Neo, Trinity, + extras)
+- **8 agents**: Matrix-themed demo agents (Architect, Edith, Neo, Trinity, + extras)
 - **2 humans**: Example human operators
 - **3 tasks**: Sample tasks showing different statuses
 - **8 messages**: Example conversations between agents

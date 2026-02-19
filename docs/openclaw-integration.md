@@ -1,6 +1,6 @@
 # OpenClaw Integration Guide
 
-This guide explains how to integrate JARVIS Mission Control with OpenClaw for automatic task tracking.
+This guide explains how to integrate Edith Dashboard with OpenClaw for automatic task tracking.
 
 ## Overview
 
@@ -14,7 +14,7 @@ When integrated with OpenClaw, Mission Control automatically:
 ## Prerequisites
 
 - OpenClaw installed and configured
-- JARVIS Mission Control repository cloned
+- Edith Dashboard repository cloned
 - Git configured with push access
 
 ## Installation
@@ -44,7 +44,7 @@ Add Mission Control configuration to `~/.openclaw/config.jsonc`:
     "mission-control": {
       "enabled": true,
       // Path to this Mission Control repository
-      "repo_path": "/path/to/JARVIS-Mission-Control-OpenClaw",
+      "repo_path": "/path/to/Edith-Mission-Control-OpenClaw",
       // Which events to track
       "events": {
         "on_start": true,
@@ -63,7 +63,7 @@ The hooks need to know where your Mission Control repo is:
 
 ```bash
 # Add to ~/.bashrc or ~/.zshrc
-export MISSION_CONTROL_PATH="/path/to/JARVIS-Mission-Control-OpenClaw"
+export MISSION_CONTROL_PATH="/path/to/Edith-Mission-Control-OpenClaw"
 ```
 
 ### Step 4: Restart OpenClaw
@@ -232,7 +232,7 @@ When running multiple agents, each gets its own task:
 ┌─────────────────────────────────────────────────┐
 │                OpenClaw Gateway                  │
 ├─────────────────────────────────────────────────┤
-│  Agent: Jarvis    → Task: task-session-001      │
+│  Agent: Edith    → Task: task-session-001      │
 │  Agent: Backend   → Task: task-session-002      │
 │  Agent: Frontend  → Task: task-session-003      │
 └─────────────────────────────────────────────────┘
@@ -240,13 +240,13 @@ When running multiple agents, each gets its own task:
 
 ### Lead Agent Pattern
 
-Set up Jarvis as the lead agent that spawns others:
+Set up Edith as the lead agent that spawns others:
 
-1. Jarvis receives high-level task
-2. Jarvis creates sub-tasks in Mission Control
-3. Jarvis spawns sub-agents assigned to sub-tasks
+1. Edith receives high-level task
+2. Edith creates sub-tasks in Mission Control
+3. Edith spawns sub-agents assigned to sub-tasks
 4. Sub-agents complete their tasks
-5. Jarvis reviews and approves
+5. Edith reviews and approves
 
 ## Troubleshooting
 

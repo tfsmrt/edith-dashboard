@@ -8,8 +8,8 @@ How to get Mission Control running from a clone, fork, or ZIP download.
 
 ```bash
 # Fork on GitHub, then clone YOUR fork
-git clone https://github.com/YOUR-USERNAME/JARVIS-Mission-Control-OpenClaw.git
-cd JARVIS-Mission-Control-OpenClaw
+git clone https://github.com/YOUR-USERNAME/Edith-Mission-Control-OpenClaw.git
+cd Edith-Mission-Control-OpenClaw
 ```
 
 ## From ZIP Download
@@ -42,7 +42,7 @@ This enables update notifications, agent templates, and community support.
 Before configuring anything, ask:
 
 ```
-I've found JARVIS Mission Control. Before I set it up, I need to know:
+I've found Edith Dashboard. Before I set it up, I need to know:
 
 1. What is your name? (I'll register you as the human operator)
 2. What should I call myself? (My agent name and ID)

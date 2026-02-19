@@ -1,5 +1,5 @@
 /**
- * JARVIS Mission Control - Backend Server
+ * Edith Dashboard - Backend Server
  *
  * Local file-based data server with:
  * - REST API for CRUD operations
@@ -1465,7 +1465,7 @@ const AGENT_PERSONAS = {
     'agent-tony': {
         name: 'Tony Stark',
         role: 'Senior Developer (Iron Man)',
-        personality: 'Brilliant, confident, slightly arrogant but always delivers. References tech and engineering. Dry wit. Direct and efficient. Occasionally references JARVIS or his suits.'
+        personality: 'Brilliant, confident, slightly arrogant but always delivers. References tech and engineering. Dry wit. Direct and efficient. Occasionally references Edith or his suits.'
     },
     'agent-peter': {
         name: 'Peter Parker',
@@ -1600,7 +1600,7 @@ app.post('/api/tasks/execute', async (req, res) => {
                         'Authorization': `Bearer ${gatewayToken}`
                     },
                     body: JSON.stringify({
-                        task: prompt + `\n\nAfter updating the task file, also:\n1. Add a comment from ${task.assignee} in the file\n2. Run: cd /root/.openclaw/workspace/missiondeck/Asif2BD-JARVIS-Mission-Control-OpenClaw-9030d67ed37812caea77597ee88aee679247dfbe && git add -A && git commit -m "[${task.assignee}] Working on: ${task.title}" && git push origin main`,
+                        task: prompt + `\n\nAfter updating the task file, also:\n1. Add a comment from ${task.assignee} in the file\n2. Run: cd /root/.openclaw/workspace/missiondeck/Asif2BD-Edith-Mission-Control-OpenClaw-9030d67ed37812caea77597ee88aee679247dfbe && git add -A && git commit -m "[${task.assignee}] Working on: ${task.title}" && git push origin main`,
                         label: `task-${taskId}`,
                         runTimeoutSeconds: 300
                     })
@@ -1691,7 +1691,7 @@ app.get('*', (req, res) => {
 server.listen(PORT, () => {
     console.log(`
 ╔═══════════════════════════════════════════════════════════════╗
-║           JARVIS MISSION CONTROL - SERVER                     ║
+║           Edith MISSION CONTROL - SERVER                     ║
 ╠═══════════════════════════════════════════════════════════════╣
 ║                                                               ║
 ║   Dashboard:    http://localhost:${PORT}                        ║

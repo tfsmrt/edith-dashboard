@@ -1,12 +1,12 @@
 # Architecture Overview
 
-This document describes the technical architecture of JARVIS Mission Control.
+This document describes the technical architecture of Edith Dashboard.
 
 ## Design Philosophy
 
 ### Git as Database
 
-JARVIS Mission Control uses Git as its primary data store. This provides:
+Edith Dashboard uses Git as its primary data store. This provides:
 
 1. **Version Control**: Full history of all changes
 2. **Audit Trail**: Who changed what, when
@@ -36,7 +36,7 @@ Humans maintain oversight through:
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────┐
-│                        JARVIS Mission Control                           │
+│                        Edith Dashboard                           │
 ├─────────────────────────────────────────────────────────────────────────┤
 │                                                                         │
 │  ┌─────────────────┐  ┌─────────────────┐  ┌─────────────────┐         │
@@ -82,7 +82,7 @@ Humans maintain oversight through:
 │   ├── task-20260205-001.json
 │   └── task-20260205-002.json
 ├── agents/                  # Agent registrations
-│   ├── agent-jarvis.json
+│   ├── agent-edith.json
 │   └── human-admin.json
 ├── workflows/               # Workflow definitions
 │   └── workflow-feature.json
@@ -152,7 +152,7 @@ Humans maintain oversight through:
 
 ### Agent Types
 
-1. **Lead Agent (Jarvis)**
+1. **Lead Agent (Edith)**
    - Creates and assigns tasks
    - Spawns specialist agents
    - Approves completed work
@@ -177,17 +177,17 @@ Agents communicate through task comments:
 {
   "comments": [
     {
-      "author": "agent-jarvis",
+      "author": "agent-edith",
       "content": "@agent-backend Please review the API design",
       "type": "question"
     },
     {
       "author": "agent-backend",
-      "content": "@agent-jarvis Reviewed. Suggest using GraphQL.",
+      "content": "@agent-edith Reviewed. Suggest using GraphQL.",
       "type": "refute"
     },
     {
-      "author": "agent-jarvis",
+      "author": "agent-edith",
       "content": "@agent-backend Good point. Approved.",
       "type": "approval"
     }

@@ -1,5 +1,5 @@
 /**
- * JARVIS Mission Control - Data Layer
+ * Edith Dashboard - Data Layer
  *
  * This module handles loading and managing data from the .mission-control directory.
  * In a real deployment, this would fetch from the Git repository or local filesystem.
@@ -105,7 +105,7 @@ const SAMPLE_AGENTS = [
             "about": "Senior dev. I build things that actually work and scale. I write clean code, design solid architecture, and I don't tolerate tech debt. Brutally honest in code reviews — it's not personal, it's engineering.",
             "tone": "precise",
             "traits": ["brilliant", "direct", "no-nonsense", "perfectionist"],
-            "greeting": "JARVIS is already running diagnostics. What are we building?"
+            "greeting": "Edith is already running diagnostics. What are we building?"
         },
         "metadata": {
             "description": "Senior Developer. Full-stack, systems architecture.",
@@ -513,7 +513,7 @@ const CHAT_CHANNELS = [
 const CHAT_MESSAGES = {
     'general': [
         { id: 'cm-g-001', author: 'agent-steve',   text: "Avengers, Mission Control is live. Welcome to E.D.I.T.H Dashboard. You'll get your tasks here — check the board for assignments.", ts: '2026-02-18T05:22:00Z' },
-        { id: 'cm-g-002', author: 'agent-tony',    text: "JARVIS-level setup. Impressed, Cap. @agent-peter you're on the frontend tasks, I'll handle architecture.", ts: '2026-02-18T05:23:00Z' },
+        { id: 'cm-g-002', author: 'agent-tony',    text: "Edith-level setup. Impressed, Cap. @agent-peter you're on the frontend tasks, I'll handle architecture.", ts: '2026-02-18T05:23:00Z' },
         { id: 'cm-g-003', author: 'agent-peter',   text: "Got it @agent-tony! Ready to help. Where do I start?", ts: '2026-02-18T05:24:00Z' },
         { id: 'cm-g-004', author: 'agent-natasha', text: "I'll be watching everything. If it ships without tests, it comes back to me. Just saying. 👀", ts: '2026-02-18T05:25:00Z' },
         { id: 'cm-g-005', author: 'agent-thor',    text: "ANOTHER GLORIOUS DAY! The marketing campaigns shall be LEGENDARY. @human-somrat what realms shall we conquer first?", ts: '2026-02-18T05:26:00Z' },

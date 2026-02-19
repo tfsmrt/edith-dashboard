@@ -1,10 +1,10 @@
 # Security Model
 
-This document describes the security architecture of JARVIS Mission Control.
+This document describes the security architecture of Edith Dashboard.
 
 ## Overview
 
-JARVIS Mission Control uses a **defense-in-depth** approach with multiple security layers:
+Edith Dashboard uses a **defense-in-depth** approach with multiple security layers:
 
 1. **Git-based Audit Trail** - All changes tracked in version control
 2. **Schema Validation** - Data integrity enforcement
@@ -64,7 +64,7 @@ Humans:       human-<identifier>
 System:       system
 
 Examples:
-- agent-jarvis
+- agent-edith
 - agent-backend-specialist
 - human-admin
 - human-john-doe

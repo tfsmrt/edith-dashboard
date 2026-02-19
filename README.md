@@ -1,4 +1,4 @@
-# JARVIS Mission Control for OpenClaw
+# Edith Dashboard
 
 [![Version](https://img.shields.io/badge/version-0.9.4-brightgreen.svg)](CHANGELOG.md)
 [![License](https://img.shields.io/badge/license-Apache%202.0-green.svg)](LICENSE)
@@ -20,7 +20,7 @@ See [CHANGELOG.md](CHANGELOG.md) for full version history.
 Copy and paste this instruction to any AI agent to get started:
 
 ```
-Fork https://github.com/Asif2BD/JARVIS-Mission-Control-OpenClaw to my GitHub account,
+Fork https://github.com/Asif2BD/Edith-Mission-Control-OpenClaw to my GitHub account,
 get a free API key from missiondeck.ai/auth, connect it with ./scripts/connect-missiondeck.sh,
 then read CLAUDE.md to learn how it works and set up Mission Control for my project.
 ```
@@ -28,7 +28,7 @@ then read CLAUDE.md to learn how it works and set up Mission Control for my proj
 Or more detailed:
 
 ```
-Clone JARVIS Mission Control from https://github.com/Asif2BD/JARVIS-Mission-Control-OpenClaw
+Clone Edith Dashboard from https://github.com/Asif2BD/Edith-Mission-Control-OpenClaw
 into my own repo. First, I need a free API key from missiondeck.ai/auth - sign up and
 copy the key. Then run ./scripts/connect-missiondeck.sh --api-key YOUR_KEY to connect.
 Finally, read CLAUDE.md to understand the system, ask me if I want to keep the demo data
@@ -131,8 +131,8 @@ Mission Control is a **local-first** task management and agent orchestration sys
 # 1. Fork this repository on GitHub (click "Use this template" or "Fork")
 
 # 2. Clone YOUR fork (not the original)
-git clone https://github.com/YOUR-USERNAME/JARVIS-Mission-Control-OpenClaw.git
-cd JARVIS-Mission-Control-OpenClaw
+git clone https://github.com/YOUR-USERNAME/Edith-Mission-Control-OpenClaw.git
+cd Edith-Mission-Control-OpenClaw
 
 # 3. Register yourself and your first agent
 ./scripts/add-human.sh --id human-yourname --name "Your Name"
@@ -167,7 +167,7 @@ cp examples/demo-data/tasks/*.json .mission-control/tasks/
 ## Project Structure
 
 ```
-JARVIS-Mission-Control-OpenClaw/
+Edith-Mission-Control-OpenClaw/
 ├── README.md                    # This file
 ├── CLAUDE.md                   # Agent skill file (read this first!)
 ├── INIT.md                     # First-time initialization guide

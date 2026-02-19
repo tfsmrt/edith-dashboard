@@ -34,7 +34,7 @@ INIT_FLAG="$MC_DIR/.initialized"
 print_banner() {
     echo -e "${CYAN}"
     echo "╔═══════════════════════════════════════════════════════════════╗"
-    echo "║           JARVIS Mission Control - Initialization             ║"
+    echo "║           Edith Dashboard - Initialization             ║"
     echo "╚═══════════════════════════════════════════════════════════════╝"
     echo -e "${NC}"
 }

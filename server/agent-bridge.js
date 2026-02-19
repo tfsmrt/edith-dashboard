@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * JARVIS Mission Control - Agent Session Bridge
+ * Edith Dashboard - Agent Session Bridge
  * 
  * Monitors OpenClaw agent sessions and feeds activity to Mission Control.
  * 
@@ -692,7 +692,7 @@ async function main() {
     
     console.log(`
 ╔═══════════════════════════════════════════════════════════════╗
-║        JARVIS MISSION CONTROL - AGENT BRIDGE                  ║
+║        Edith MISSION CONTROL - AGENT BRIDGE                  ║
 ╠═══════════════════════════════════════════════════════════════╣
 ║                                                               ║
 ║   Monitoring: ${OPENCLAW_AGENTS_DIR}

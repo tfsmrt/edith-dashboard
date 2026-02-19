@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# JARVIS Mission Control - Create Task Script
+# Edith Dashboard - Create Task Script
 # Creates a new task file in .mission-control/tasks/
 #
 # Usage: ./scripts/create-task.sh "Task Title" [options]
@@ -42,7 +42,7 @@ Usage: $(basename "$0") "Task Title" [options]
 Options:
   --priority <level>     Set priority (critical, high, medium, low)
   --labels <labels>      Comma-separated labels
-  --assignee <id>        Assign to agent/human (e.g., agent-jarvis)
+  --assignee <id>        Assign to agent/human (e.g., agent-edith)
   --description <text>   Task description
   --dry-run              Show task JSON without creating file
   -h, --help             Show this help message

@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://jarvis-mission-control.dev/schemas/agent.json",
+  "$id": "https://edith-mission-control.dev/schemas/agent.json",
   "title": "Agent",
   "description": "An agent (AI or human) in the Mission Control system",
   "type": "object",

@@ -249,6 +249,21 @@ const SAMPLE_QUEUE = [
         "success_count": 2,
         "failure_count": 0,
         "labels": ["backup", "git", "automated"]
+    },
+    {
+        "id": "queue-memory-update",
+        "name": "Memory Maintenance",
+        "type": "cron",
+        "schedule": "0 */6 * * *",
+        "description": "Reviews daily memory files and updates long-term MEMORY.md",
+        "status": "running",
+        "assigned_to": "agent-steve",
+        "last_run": "2026-02-19T00:00:00Z",
+        "next_run": "2026-02-19T06:00:00Z",
+        "run_count": 1,
+        "success_count": 1,
+        "failure_count": 0,
+        "labels": ["memory", "maintenance", "automated"]
     }
 ];
 
@@ -346,7 +361,7 @@ class MissionControlData {
                 this.tasks = tasks;
                 this.agents = agents || [];
                 this.humans = humans || [];
-                this.queue = queue || [];
+                this.queue = (queue && queue.length > 0) ? queue : [...SAMPLE_QUEUE];
                 try {
                     const messages = await window.MissionControlAPI.getMessages();
                     if (messages) this.messages = messages;

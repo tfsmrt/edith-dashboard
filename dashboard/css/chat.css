@@ -453,32 +453,7 @@
 .chat-nav-btn.active { color: hsl(var(--foreground)); }
 
 /* Board/Chat toggle area */
-.view-toggle {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    margin-right: 8px;
-}
-.view-toggle-btn {
-    display: flex;
-    align-items: center;
-    gap: 5px;
-    padding: 5px 10px;
-    border-radius: 6px;
-    border: 1px solid hsl(var(--border));
-    background: transparent;
-    color: hsl(var(--muted-foreground));
-    font-size: 0.78rem;
-    font-weight: 500;
-    cursor: pointer;
-    transition: all 0.15s;
-    font-family: inherit;
-}
-.view-toggle-btn.active {
-    background: hsl(var(--primary));
-    color: hsl(var(--primary-foreground));
-    border-color: hsl(var(--primary));
-}
+/* Toggle group styles moved to styles.css */
 
 @media (max-width: 900px) {
     .chat-members-sidebar { display: none; }

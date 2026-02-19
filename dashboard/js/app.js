@@ -254,6 +254,20 @@ function applyTheme(theme) {
 /**
  * Toggle dark/light theme (shadcn/ui approach)
  */
+// Populate sidebar user info from localStorage
+function initSidebarUser() {
+    try {
+        const user = JSON.parse(localStorage.getItem('edith_user') || '{}');
+        const nameEl = document.getElementById('sidebar-user-name');
+        const roleEl = document.getElementById('sidebar-user-role');
+        const avatarEl = document.getElementById('sidebar-user-avatar');
+        if (nameEl && user.name) nameEl.textContent = user.name;
+        if (roleEl && user.role) roleEl.textContent = user.role.charAt(0).toUpperCase() + user.role.slice(1);
+        if (avatarEl && user.avatar) { avatarEl.src = user.avatar; avatarEl.style.display = ''; }
+    } catch {}
+}
+document.addEventListener('DOMContentLoaded', initSidebarUser);
+
 function logout() {
     localStorage.removeItem('edith_token');
     localStorage.removeItem('edith_user');

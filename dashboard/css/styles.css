@@ -551,6 +551,65 @@ body::after {
     position: relative;
 }
 
+/* User info at sidebar bottom */
+.sidebar-user {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 14px;
+    border-top: 1px solid var(--border-color);
+    margin-top: auto;
+    flex-shrink: 0;
+}
+.sidebar-user-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+}
+.sidebar-user-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+.sidebar-user-details {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+.sidebar-user-name {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: hsl(var(--foreground, 0 0% 98%));
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.sidebar-user-role {
+    font-size: 0.68rem;
+    color: hsl(var(--muted-foreground, 0 0% 63%));
+    white-space: nowrap;
+}
+.sidebar-logout-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    border: none;
+    background: transparent;
+    color: hsl(var(--muted-foreground, 0 0% 63%));
+    cursor: pointer;
+    transition: all 0.15s;
+    flex-shrink: 0;
+}
+.sidebar-logout-btn:hover {
+    background: hsl(var(--muted, 0 0% 15%));
+    color: hsl(var(--foreground, 0 0% 98%));
+}
+
 /* Clean right border */
 .sidebar::after {
     content: '';

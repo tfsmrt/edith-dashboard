@@ -459,10 +459,22 @@ function showChatView(channelId) {
     if (allMembers.length === 0) {
         initChat().then(() => {
             if (channelId) switchChannel(channelId);
+            else {
+                switchChannel(activeChatChannel || 'general');
+            }
         });
     } else {
         if (channelId) switchChannel(channelId);
-        else scrollToBottom();
+        else {
+            // Update URL to reflect current channel
+            const ch = activeChatChannel || 'general';
+            if (activeDM) {
+                history.pushState({ dm: activeDM }, '', `/chat/user/${activeDM}`);
+            } else {
+                history.pushState({ channel: ch }, '', `/chat/channel/${ch}`);
+            }
+            scrollToBottom();
+        }
     }
 }
 

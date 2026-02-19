@@ -404,25 +404,24 @@ function renderHumans() {
 
     if (!container) return;
 
-    // Update subtitle
-    const activeCount = humans.filter(h => h.status === 'online' || h.status === 'away').length;
+    const activeCount = humans.filter(h => h.status === 'active' || h.status === 'online' || h.status === 'away').length;
     subtitle.textContent = `${activeCount} online`;
 
     container.innerHTML = humans.map(human => {
-        const avatarHtml = human.avatar
-            ? `<img src="${human.avatar}" alt="${escapeHtml(human.name)}" class="entity-avatar-img human" onerror="this.outerHTML='<div class=\\'entity-avatar human\\'>${getInitials(human.name)}</div>'"/>`
+        const avatarUrl = human.avatar || (human.metadata && human.metadata.avatar);
+        const avatarHtml = avatarUrl
+            ? `<img src="${avatarUrl}" alt="${escapeHtml(human.name)}" class="entity-avatar-img human" onerror="this.outerHTML='<div class=\\'entity-avatar human\\'>${getInitials(human.name)}</div>'"/>`
             : `<div class="entity-avatar human">${getInitials(human.name)}</div>`;
 
-        const channelIcons = getChannelIcons(human.channels);
+        const firstName = human.name.split(' ')[0];
+        const designation = human.designation || (human.metadata && human.metadata.designation) || '';
 
         return `
             <div class="entity-row human-row clickable" data-entity-id="${human.id}" onclick="highlightEntityTasks('${human.id}')">
-                <div class="entity-status ${human.status}"></div>
                 ${avatarHtml}
                 <div class="entity-info">
-                    <span class="entity-name">${escapeHtml(human.name)}</span>
-                    <span class="entity-role ${human.role}">${human.role}</span>
-                    ${channelIcons}
+                    <span class="entity-name">${escapeHtml(firstName)}</span>
+                    ${designation ? `<span class="entity-designation">${escapeHtml(designation)}</span>` : ''}
                 </div>
                 <span class="entity-tasks">${human.completed_tasks || 0}</span>
             </div>

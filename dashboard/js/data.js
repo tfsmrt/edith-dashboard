@@ -215,26 +215,11 @@ const SAMPLE_AGENTS = [
 // Task Queue — active cron jobs
 const SAMPLE_QUEUE = [
     {
-        "id": "queue-memory-maintenance",
-        "name": "Memory Maintenance",
+        "id": "queue-github-backup",
+        "name": "GitHub Backup",
         "type": "cron",
         "schedule": "*/30 * * * *",
-        "description": "Reviews daily memory files and updates long-term MEMORY.md",
-        "status": "running",
-        "assigned_to": "agent-steve",
-        "last_run": null,
-        "next_run": null,
-        "run_count": 0,
-        "success_count": 0,
-        "failure_count": 0,
-        "labels": ["memory", "maintenance", "automated"]
-    },
-    {
-        "id": "queue-workspace-backup",
-        "name": "Workspace Backup",
-        "type": "cron",
-        "schedule": "*/30 * * * *",
-        "description": "Commits and pushes workspace changes to GitHub and HuggingFace",
+        "description": "Commits and pushes workspace changes to GitHub",
         "status": "running",
         "assigned_to": "agent-steve",
         "last_run": null,
@@ -243,6 +228,21 @@ const SAMPLE_QUEUE = [
         "success_count": 0,
         "failure_count": 0,
         "labels": ["backup", "git", "automated"]
+    },
+    {
+        "id": "queue-huggingface-backup",
+        "name": "HuggingFace Backup",
+        "type": "cron",
+        "schedule": "*/30 * * * *",
+        "description": "Commits and pushes workspace changes to HuggingFace",
+        "status": "running",
+        "assigned_to": "agent-steve",
+        "last_run": null,
+        "next_run": null,
+        "run_count": 0,
+        "success_count": 0,
+        "failure_count": 0,
+        "labels": ["backup", "huggingface", "automated"]
     }
 ];
 

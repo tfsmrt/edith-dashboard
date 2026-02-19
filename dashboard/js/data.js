@@ -142,7 +142,7 @@ class MissionControlData {
     getParentAgents() { return this.agents.filter(a => !a.parent_agent); }
     getSubAgents(parentId) { return this.agents.filter(a => a.parent_agent === parentId && a.role === 'sub-agent'); }
     getAllSubAgents() { return this.agents.filter(a => a.role === 'sub-agent'); }
-    getAgent(id) { return this.agents.find(a => a.id === id); }
+    getAgent(id) { return this.agents.find(a => a.id === id) || this.humans.find(h => h.id === id); }
     getHumans() { return this.humans; }
     getActiveHumans() { return this.humans.filter(h => h.status === 'online' || h.status === 'away'); }
     getHuman(id) { return this.humans.find(h => h.id === id); }

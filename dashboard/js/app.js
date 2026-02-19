@@ -417,7 +417,7 @@ function renderHumans() {
         const designation = human.designation || (human.metadata && human.metadata.designation) || '';
 
         return `
-            <div class="entity-row human-row clickable" data-entity-id="${human.id}" onclick="highlightEntityTasks('${human.id}')">
+            <div class="entity-row human-row clickable" data-entity-id="${human.id}" onclick="openAgentProfile('${human.id}')">
                 ${avatarHtml}
                 <div class="entity-info">
                     <span class="entity-name">${escapeHtml(firstName)}</span>

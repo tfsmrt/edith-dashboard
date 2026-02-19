@@ -2997,419 +2997,304 @@ body::after {
 }
 
 /* ============================================
-   AGENT PROFILE PANEL - Slide-out Right Panel
+   AGENT PROFILE PANEL — shadcn-inspired
    ============================================ */
 
 .agent-profile-panel {
     position: fixed;
-    top: 73px; /* below header */
+    top: 57px;
     right: 0;
     bottom: 0;
     width: 420px;
-    background: var(--bg-secondary);
-    border-left: 1px solid var(--border-color);
-    z-index: 150;
+    max-width: 100vw;
+    background: hsl(var(--background));
+    border-left: 1px solid hsl(var(--border));
+    z-index: 100;
+    transform: translateX(100%);
+    transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
     display: flex;
     flex-direction: column;
-    transform: translateX(100%);
-    transition: transform var(--transition-slow);
-    box-shadow: none;
-    overflow: hidden;
+    box-shadow: -4px 0 24px rgba(0,0,0,0.12);
 }
+.agent-profile-panel.open { transform: translateX(0); }
 
-/* Glowing left border accent */
-.agent-profile-panel::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    bottom: 0;
-    width: 1px;
-    background: linear-gradient(180deg, var(--neon-cyan), transparent 30%, transparent 70%, var(--neon-blue));
-    opacity: 0;
-    transition: opacity var(--transition-slow);
-    z-index: 1;
-}
-
-.agent-profile-panel.open {
-    transform: translateX(0);
-    box-shadow: -8px 0 32px rgba(0, 0, 0, 0.5), -2px 0 16px rgba(0, 212, 255, 0.08);
-}
-
-.agent-profile-panel.open::before {
-    opacity: 0.7;
-}
-
-/* Profile Panel Header */
-.profile-panel-header {
+.pp-header {
     display: flex;
-    align-items: flex-start;
-    gap: var(--spacing-md);
-    padding: var(--spacing-lg);
-    border-bottom: 1px solid var(--border-color);
-    position: relative;
-    background: linear-gradient(180deg, rgba(14, 165, 233, 0.04) 0%, transparent 100%);
+    justify-content: flex-end;
+    padding: 12px 16px 0;
 }
-
-.profile-panel-close {
-    position: absolute;
-    top: var(--spacing-md);
-    right: var(--spacing-md);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 32px;
-    height: 32px;
-    background: var(--bg-tertiary);
-    border: 1px solid var(--border-color);
-    border-radius: var(--radius-md);
-    color: var(--text-muted);
-    cursor: pointer;
-    transition: all var(--transition-fast);
-    font-size: 1rem;
-    line-height: 1;
-}
-
-.profile-panel-close:hover {
-    border-color: var(--neon-red);
-    color: var(--neon-red);
-    box-shadow: var(--glow-red);
-}
-
-/* Large profile avatar */
-.profile-avatar-large {
-    width: 64px;
-    height: 64px;
-    border-radius: var(--radius-lg);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-family: 'Inter', system-ui, sans-serif;
-    font-weight: 700;
-    font-size: 1.5rem;
-    color: var(--bg-primary);
-    flex-shrink: 0;
-    position: relative;
-}
-
-.profile-avatar-large.lead {
-    background: linear-gradient(135deg, var(--neon-blue), var(--neon-cyan));
-    box-shadow: var(--glow-blue);
-}
-
-.profile-avatar-large.specialist {
-    background: linear-gradient(135deg, var(--neon-green), #00cc6a);
-    box-shadow: var(--glow-green);
-}
-
-.profile-avatar-large.reviewer {
-    background: linear-gradient(135deg, var(--neon-purple), #7c3aed);
-    box-shadow: 0 0 20px rgba(168, 85, 247, 0.3);
-}
-
-.profile-avatar-large.observer {
-    background: linear-gradient(135deg, #6b7280, #4b5563);
-}
-
-/* Avatar image variant */
-.profile-avatar-large img {
-    width: 100%;
-    height: 100%;
-    border-radius: var(--radius-lg);
-    object-fit: cover;
-}
-
-.profile-identity {
-    flex: 1;
-    min-width: 0;
-    padding-right: 40px; /* room for close button */
-}
-
-.profile-name {
-    font-family: 'Inter', system-ui, sans-serif;
-    font-size: 1.125rem;
-    font-weight: 700;
-    color: var(--text-primary);
-    letter-spacing: 0.03em;
-    line-height: 1.3;
-    margin-bottom: 2px;
-}
-
-.profile-designation {
-    font-family: 'Inter', system-ui, sans-serif;
-    font-size: 0.8125rem;
-    font-weight: 500;
-    color: var(--neon-cyan);
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-    margin-bottom: var(--spacing-sm);
-}
-
-.profile-badges {
-    display: flex;
-    align-items: center;
-    gap: var(--spacing-sm);
-    flex-wrap: wrap;
-}
-
-/* ============================================
-   ROLE BADGES
-   ============================================ */
-
-.role-badge {
-    font-family: 'Inter', system-ui, monospace;
-    font-size: 0.625rem;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    padding: 0.2rem 0.625rem;
-    border-radius: 999px;
+.pp-close {
     display: inline-flex;
     align-items: center;
-    gap: var(--spacing-xs);
+    justify-content: center;
+    width: 32px; height: 32px;
+    border-radius: 8px;
+    border: none;
+    background: transparent;
+    color: hsl(var(--muted-foreground));
+    cursor: pointer;
+    transition: all 0.15s;
+}
+.pp-close:hover {
+    background: hsl(var(--muted));
+    color: hsl(var(--foreground));
 }
 
-.role-badge.lead {
-    background: linear-gradient(135deg, rgba(168, 85, 247, 0.25), rgba(124, 58, 237, 0.25));
-    color: var(--neon-purple);
-    border: 1px solid rgba(168, 85, 247, 0.4);
+.pp-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 0 16px 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
 }
 
-.role-badge.specialist {
-    background: rgba(0, 255, 136, 0.12);
-    color: var(--neon-green);
-    border: 1px solid rgba(0, 255, 136, 0.35);
+/* Card */
+.pp-card {
+    background: hsl(var(--card, var(--background)));
+    border: 1px solid hsl(var(--border));
+    border-radius: 12px;
+    padding: 16px;
+}
+.pp-card-title {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: hsl(var(--foreground));
+    margin: 0 0 8px;
+    letter-spacing: -0.01em;
+}
+.pp-card-text {
+    font-size: 0.825rem;
+    color: hsl(var(--muted-foreground));
+    margin: 0;
+    line-height: 1.5;
 }
 
-.role-badge.reviewer {
-    background: rgba(255, 149, 0, 0.12);
-    color: var(--neon-orange);
-    border: 1px solid rgba(255, 149, 0, 0.35);
+/* Identity Card */
+.pp-identity-card {
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    padding: 20px 16px;
+}
+.pp-avatar-wrap {
+    width: 64px; height: 64px;
+    border-radius: 50%;
+    overflow: hidden;
+    background: hsl(var(--muted));
+    flex-shrink: 0;
+}
+.pp-avatar {
+    width: 100%; height: 100%;
+    object-fit: cover;
+    border-radius: 50%;
+}
+.pp-avatar-fallback {
+    width: 100%; height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 1.2rem;
+    color: hsl(var(--muted-foreground));
+    background: hsl(var(--muted));
+    border-radius: 50%;
+}
+.pp-identity-info { text-align: center; }
+.pp-name {
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: hsl(var(--foreground));
+    margin: 0;
+    letter-spacing: -0.02em;
+}
+.pp-designation {
+    font-size: 0.8rem;
+    color: hsl(var(--primary));
+    margin: 2px 0 0;
+    font-weight: 500;
+}
+.pp-meta-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    justify-content: center;
 }
 
-.role-badge.observer {
-    background: rgba(107, 114, 128, 0.15);
-    color: var(--text-muted);
-    border: 1px solid rgba(107, 114, 128, 0.35);
+/* Badge */
+.pp-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px 10px;
+    border-radius: 9999px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    background: hsl(var(--muted));
+    color: hsl(var(--muted-foreground));
+    border: 1px solid hsl(var(--border));
 }
+.pp-badge.lead { background: hsl(210 100% 95%); color: hsl(210 100% 40%); border-color: hsl(210 100% 85%); }
+.pp-badge.specialist { background: hsl(270 100% 95%); color: hsl(270 60% 45%); border-color: hsl(270 100% 85%); }
+.pp-badge.reviewer { background: hsl(150 60% 93%); color: hsl(150 60% 30%); border-color: hsl(150 60% 80%); }
 
-/* Agent status badge (pill with dot) */
-.profile-status-badge {
+/* Status */
+.pp-status {
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    font-family: 'Inter', system-ui, monospace;
-    font-size: 0.625rem;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    padding: 0.2rem 0.75rem;
-    border-radius: 999px;
-    background: var(--bg-tertiary);
-    border: 1px solid var(--border-color);
-    color: var(--text-secondary);
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: hsl(var(--muted-foreground));
 }
-
-.profile-status-badge .status-dot {
-    width: 7px;
-    height: 7px;
+.pp-status-dot {
+    width: 8px; height: 8px;
     border-radius: 50%;
-    flex-shrink: 0;
+    background: hsl(var(--muted-foreground));
 }
+.pp-status-dot.active { background: hsl(142 76% 46%); }
+.pp-status-dot.busy { background: hsl(38 92% 50%); }
+.pp-status-dot.idle { background: hsl(var(--muted-foreground)); }
+.pp-status-dot.offline { background: hsl(var(--muted-foreground)); opacity: 0.4; }
 
-.profile-status-badge.active .status-dot {
-    background: var(--neon-green);
-    box-shadow: 0 0 6px var(--neon-green);
-    animation: status-pulse 2s ease-in-out infinite;
-}
-
-.profile-status-badge.active {
-    color: var(--neon-green);
-    border-color: rgba(0, 255, 136, 0.3);
-}
-
-.profile-status-badge.busy .status-dot {
-    background: var(--neon-orange);
-    box-shadow: 0 0 6px var(--neon-orange);
-    animation: status-pulse 1s ease-in-out infinite;
-}
-
-.profile-status-badge.busy {
-    color: var(--neon-orange);
-    border-color: rgba(255, 149, 0, 0.3);
-}
-
-.profile-status-badge.idle .status-dot {
-    background: var(--status-inbox);
-}
-
-.profile-status-badge.idle {
-    color: var(--text-muted);
-}
-
-.profile-status-badge.offline .status-dot {
-    background: var(--status-inbox);
-}
-
-.profile-status-badge.offline {
-    color: var(--text-muted);
-}
-
-/* Profile About Section */
-.profile-about {
-    padding: var(--spacing-md) var(--spacing-lg);
-    border-bottom: 1px solid var(--border-color);
-}
-
-.profile-about-label {
-    font-family: 'Inter', system-ui, sans-serif;
-    font-size: 0.5625rem;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.12em;
-    color: var(--text-muted);
-    margin-bottom: var(--spacing-xs);
-}
-
-.profile-about-text {
-    font-family: 'Inter', system-ui, sans-serif;
-    font-size: 0.875rem;
-    color: var(--text-secondary);
-    line-height: 1.6;
-}
-
-/* Profile Skills Section */
-.profile-skills {
-    padding: var(--spacing-md) var(--spacing-lg);
-    border-bottom: 1px solid var(--border-color);
-}
-
-.profile-skills-label {
-    font-family: 'Inter', system-ui, sans-serif;
-    font-size: 0.5625rem;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.12em;
-    color: var(--text-muted);
-    margin-bottom: var(--spacing-sm);
-}
-
-.profile-skills-list {
+/* Skills */
+.pp-skills {
     display: flex;
     flex-wrap: wrap;
-    gap: var(--spacing-xs);
+    gap: 6px;
 }
-
-.profile-skill-tag {
-    font-family: 'Inter', system-ui, monospace;
-    font-size: 0.6875rem;
-    padding: 0.2rem 0.625rem;
-    background: var(--bg-tertiary);
-    color: var(--neon-cyan);
-    border: 1px solid var(--border-color);
-    border-radius: 999px;
-    transition: all var(--transition-fast);
-    letter-spacing: 0.02em;
-}
-
-.profile-skill-tag:hover {
-    border-color: var(--neon-cyan);
-    box-shadow: 0 0 8px rgba(34, 211, 238, 0.2);
-}
-
-/* ============================================
-   PROFILE TABS (Attention, Timeline, Messages)
-   ============================================ */
-
-.profile-tabs {
-    display: flex;
-    border-bottom: 1px solid var(--border-color);
-    background: var(--bg-tertiary);
-    flex-shrink: 0;
-}
-
-.profile-tab {
-    flex: 1;
-    display: flex;
+.pp-skills .skill-tag, .pp-skills span {
+    display: inline-flex;
     align-items: center;
-    justify-content: center;
-    gap: var(--spacing-xs);
-    padding: var(--spacing-sm) var(--spacing-md);
-    font-family: 'Inter', system-ui, sans-serif;
-    font-size: 0.625rem;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    color: var(--text-muted);
-    background: transparent;
+    padding: 3px 10px;
+    border-radius: 9999px;
+    font-size: 0.72rem;
+    font-weight: 500;
+    background: hsl(var(--muted));
+    color: hsl(var(--muted-foreground));
+    border: 1px solid hsl(var(--border));
+}
+
+/* Tabs */
+.pp-tabs {
+    display: flex;
+    border-bottom: 1px solid hsl(var(--border));
+    gap: 0;
+    padding: 0;
+}
+.pp-tab {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 10px 14px;
+    font-size: 0.78rem;
+    font-weight: 500;
+    color: hsl(var(--muted-foreground));
+    background: none;
     border: none;
     border-bottom: 2px solid transparent;
     cursor: pointer;
-    transition: all var(--transition-fast);
+    transition: all 0.15s;
+    font-family: inherit;
     position: relative;
 }
-
-.profile-tab:hover {
-    color: var(--text-secondary);
-    background: rgba(14, 165, 233, 0.04);
+.pp-tab:hover { color: hsl(var(--foreground)); }
+.pp-tab.active {
+    color: hsl(var(--foreground));
+    border-bottom-color: hsl(var(--primary));
 }
-
-.profile-tab.active {
-    color: var(--neon-cyan);
-    border-bottom-color: var(--neon-cyan);
-    background: rgba(14, 165, 233, 0.06);
-}
-
-/* Glow effect on active tab underline */
-.profile-tab.active::after {
-    content: '';
-    position: absolute;
-    bottom: -2px;
-    left: 20%;
-    right: 20%;
-    height: 2px;
-    background: var(--neon-cyan);
-    box-shadow: 0 0 8px var(--neon-cyan), 0 0 16px rgba(34, 211, 238, 0.3);
-    border-radius: 1px;
-}
-
-.profile-tab-badge {
+.pp-tab-badge {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    min-width: 16px;
-    height: 16px;
-    padding: 0 4px;
-    font-family: 'Inter', system-ui, monospace;
-    font-size: 0.5625rem;
+    min-width: 18px; height: 18px;
+    padding: 0 5px;
+    border-radius: 9999px;
+    font-size: 0.65rem;
     font-weight: 700;
-    border-radius: 999px;
-    line-height: 1;
+    background: hsl(var(--primary));
+    color: hsl(var(--primary-foreground));
 }
 
-.profile-tab-badge.attention {
-    background: var(--neon-red);
-    color: white;
-    box-shadow: 0 0 6px rgba(255, 51, 102, 0.4);
-}
-
-.profile-tab-badge.messages {
-    background: var(--neon-cyan);
-    color: var(--bg-primary);
-    box-shadow: 0 0 6px rgba(34, 211, 238, 0.3);
-}
-
-.profile-tab-badge.default {
-    background: var(--bg-card);
-    color: var(--text-muted);
-    border: 1px solid var(--border-color);
-}
-
-.profile-tab-content {
+.pp-tab-content {
     flex: 1;
     overflow-y: auto;
     min-height: 0;
 }
+
+/* Muted text */
+.pp-muted {
+    font-size: 0.8rem;
+    color: hsl(var(--muted-foreground));
+    padding: 16px 0;
+    text-align: center;
+}
+
+/* Thread */
+.pp-thread-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 0;
+    border-bottom: 1px solid hsl(var(--border));
+    margin-bottom: 8px;
+}
+.pp-thread-back {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.78rem;
+    font-weight: 500;
+    color: hsl(var(--muted-foreground));
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 4px 8px;
+    border-radius: 6px;
+    font-family: inherit;
+}
+.pp-thread-back:hover { background: hsl(var(--muted)); color: hsl(var(--foreground)); }
+.pp-thread-name { font-size: 0.85rem; font-weight: 600; color: hsl(var(--foreground)); }
+
+/* Input */
+.pp-input-row {
+    display: flex;
+    gap: 8px;
+    padding: 8px 0 0;
+    border-top: 1px solid hsl(var(--border));
+    margin-top: 8px;
+}
+.pp-input {
+    flex: 1;
+    padding: 8px 12px;
+    border-radius: 8px;
+    border: 1px solid hsl(var(--border));
+    background: hsl(var(--background));
+    color: hsl(var(--foreground));
+    font-size: 0.82rem;
+    font-family: inherit;
+    outline: none;
+    transition: border-color 0.15s;
+}
+.pp-input:focus { border-color: hsl(var(--primary)); }
+.pp-send-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px; height: 36px;
+    border-radius: 8px;
+    border: none;
+    background: hsl(var(--primary));
+    color: hsl(var(--primary-foreground));
+    cursor: pointer;
+    transition: opacity 0.15s;
+}
+.pp-send-btn:hover { opacity: 0.85; }
+
 
 /* ============================================
    ATTENTION TAB ITEMS

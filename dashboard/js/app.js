@@ -1381,7 +1381,7 @@ function switchProfileTab(tabName) {
     currentProfileTab = tabName;
 
     // Update tab buttons
-    document.querySelectorAll('.profile-tab').forEach(tab => {
+    document.querySelectorAll('.pp-tab').forEach(tab => {
         tab.classList.toggle('active', tab.dataset.tab === tabName);
     });
 

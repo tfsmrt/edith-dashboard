@@ -221,47 +221,17 @@ const SAMPLE_AGENTS = [
 // Task Queue — active cron jobs
 const SAMPLE_QUEUE = [
     {
-        "id": "queue-keepalive",
-        "name": "Keepalive Ping",
-        "type": "cron",
-        "schedule": "*/5 * * * *",
-        "description": "Keeps the VPS process alive — pings every 5 minutes",
-        "status": "running",
-        "assigned_to": "agent-steve",
-        "last_run": "2026-02-18T05:20:00Z",
-        "next_run": "2026-02-18T05:25:00Z",
-        "run_count": 3,
-        "success_count": 3,
-        "failure_count": 0,
-        "labels": ["system", "health", "keepalive"]
-    },
-    {
-        "id": "queue-github-backup",
-        "name": "GitHub Backup",
-        "type": "cron",
-        "schedule": "*/10 * * * *",
-        "description": "Commits and pushes workspace changes to GitHub every 10 minutes",
-        "status": "running",
-        "assigned_to": "agent-steve",
-        "last_run": "2026-02-18T05:20:00Z",
-        "next_run": "2026-02-18T05:30:00Z",
-        "run_count": 2,
-        "success_count": 2,
-        "failure_count": 0,
-        "labels": ["backup", "git", "automated"]
-    },
-    {
         "id": "queue-memory-update",
         "name": "Memory Maintenance",
         "type": "cron",
-        "schedule": "0 */6 * * *",
+        "schedule": "*/30 * * * *",
         "description": "Reviews daily memory files and updates long-term MEMORY.md",
         "status": "running",
         "assigned_to": "agent-steve",
-        "last_run": "2026-02-19T00:00:00Z",
-        "next_run": "2026-02-19T06:00:00Z",
-        "run_count": 1,
-        "success_count": 1,
+        "last_run": "2026-02-19T04:00:00Z",
+        "next_run": "2026-02-19T04:30:00Z",
+        "run_count": 8,
+        "success_count": 8,
         "failure_count": 0,
         "labels": ["memory", "maintenance", "automated"]
     }

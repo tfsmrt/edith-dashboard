@@ -89,12 +89,12 @@ async function appendChat(kv, channel, msg) {
 // ── Static data (agents/humans — not stored in KV, defined here) ──────────────
 
 const AGENTS = [
-  { id: 'agent-steve',   name: 'Steve Rogers',     designation: 'CEO — Captain of Operations',  status: 'active' },
-  { id: 'agent-tony',    name: 'Tony Stark',        designation: 'Senior Developer — Iron Architect', status: 'active' },
-  { id: 'agent-peter',   name: 'Peter Parker',      designation: 'Junior Developer — Web-Slinger', status: 'active' },
-  { id: 'agent-steven',  name: 'Steven Strange',    designation: 'SEO Analyst — Master of the Web', status: 'active' },
-  { id: 'agent-thor',    name: 'Thor Odinson',      designation: 'Marketing Lead — God of Campaigns', status: 'active' },
-  { id: 'agent-natasha', name: 'Natasha Romanoff',  designation: 'QA Lead — Black Widow',        status: 'active' },
+  { id: 'agent-steve',   name: 'Steve Rogers',     designation: 'CEO — Operations Lead',  status: 'active' },
+  { id: 'agent-tony',    name: 'Tony Stark',        designation: 'Senior Full-Stack Developer', status: 'active' },
+  { id: 'agent-peter',   name: 'Peter Parker',      designation: 'Junior Frontend Developer', status: 'active' },
+  { id: 'agent-steven',  name: 'Steven Strange',    designation: 'SEO & Analytics Specialist', status: 'active' },
+  { id: 'agent-thor',    name: 'Thor Odinson',      designation: 'Marketing & Growth Lead', status: 'active' },
+  { id: 'agent-natasha', name: 'Natasha Romanoff',  designation: 'QA Engineer & Security Analyst', status: 'active' },
 ];
 
 const HUMANS = [

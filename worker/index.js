@@ -228,6 +228,12 @@ export default {
           return R(await getChatMessages(kv, channel));
         }
 
+        if (method === 'PUT') {
+          const body = await request.json();
+          await kv.put(`chat:${channel}`, JSON.stringify(body));
+          return R(body);
+        }
+
         if (method === 'POST') {
           const body = await request.json();
           if (!body.author || !body.text) return E('author and text required');

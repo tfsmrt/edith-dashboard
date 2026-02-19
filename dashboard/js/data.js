@@ -221,19 +221,34 @@ const SAMPLE_AGENTS = [
 // Task Queue — active cron jobs
 const SAMPLE_QUEUE = [
     {
-        "id": "queue-memory-update",
+        "id": "queue-memory-maintenance",
         "name": "Memory Maintenance",
         "type": "cron",
         "schedule": "*/30 * * * *",
         "description": "Reviews daily memory files and updates long-term MEMORY.md",
         "status": "running",
         "assigned_to": "agent-steve",
-        "last_run": "2026-02-19T04:00:00Z",
-        "next_run": "2026-02-19T04:30:00Z",
+        "last_run": "2026-02-19T04:30:00Z",
+        "next_run": "2026-02-19T05:00:00Z",
         "run_count": 8,
         "success_count": 8,
         "failure_count": 0,
         "labels": ["memory", "maintenance", "automated"]
+    },
+    {
+        "id": "queue-workspace-backup",
+        "name": "Workspace Backup",
+        "type": "cron",
+        "schedule": "*/30 * * * *",
+        "description": "Commits and pushes workspace changes to GitHub and HuggingFace",
+        "status": "running",
+        "assigned_to": "agent-steve",
+        "last_run": "2026-02-19T04:30:00Z",
+        "next_run": "2026-02-19T05:00:00Z",
+        "run_count": 8,
+        "success_count": 8,
+        "failure_count": 0,
+        "labels": ["backup", "git", "automated"]
     }
 ];
 

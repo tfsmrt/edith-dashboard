@@ -1289,8 +1289,9 @@ function openAgentProfile(agentId) {
     // Avatar
     const avatarImg = document.getElementById('profile-avatar');
     const avatarFallback = document.getElementById('profile-avatar-fallback');
-    if (agent.avatar) {
-        avatarImg.src = agent.avatar;
+    const avatarUrl = agent.avatar || (agent.metadata && agent.metadata.avatar);
+    if (avatarUrl) {
+        avatarImg.src = avatarUrl;
         avatarImg.alt = agent.name;
         avatarImg.style.display = '';
         avatarFallback.style.display = 'none';
@@ -1303,7 +1304,7 @@ function openAgentProfile(agentId) {
 
     // Name & designation
     document.getElementById('profile-name').textContent = agent.name;
-    document.getElementById('profile-designation').textContent = agent.designation || agent.role;
+    document.getElementById('profile-designation').textContent = agent.designation || (agent.metadata && agent.metadata.designation) || agent.role;
 
     // Role badge
     const roleBadge = document.getElementById('profile-role-badge');

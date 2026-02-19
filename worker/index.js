@@ -86,20 +86,22 @@ async function appendChat(kv, channel, msg) {
   return msg;
 }
 
-// ── Static data (agents/humans — not stored in KV, defined here) ──────────────
+// ── KV-backed agents, humans, queue ───────────────────────────────────────────
 
-const AGENTS = [
-  { id: 'agent-steve',   name: 'Steve Rogers',     designation: 'CEO — Operations Lead',  status: 'active' },
-  { id: 'agent-tony',    name: 'Tony Stark',        designation: 'Senior Full-Stack Developer', status: 'active' },
-  { id: 'agent-peter',   name: 'Peter Parker',      designation: 'Junior Frontend Developer', status: 'active' },
-  { id: 'agent-steven',  name: 'Steven Strange',    designation: 'SEO & Analytics Specialist', status: 'active' },
-  { id: 'agent-thor',    name: 'Thor Odinson',      designation: 'Marketing & Growth Lead', status: 'active' },
-  { id: 'agent-natasha', name: 'Natasha Romanoff',  designation: 'QA Engineer & Security Analyst', status: 'active' },
-];
+async function getAgents(kv) {
+  const raw = await kv.get('agents');
+  return raw ? JSON.parse(raw) : [];
+}
 
-const HUMANS = [
-  { id: 'human-somrat', name: 'Somrat', designation: 'CEO & Founder', status: 'online' },
-];
+async function getHumans(kv) {
+  const raw = await kv.get('humans');
+  return raw ? JSON.parse(raw) : [];
+}
+
+async function getQueue(kv) {
+  const raw = await kv.get('queue');
+  return raw ? JSON.parse(raw) : [];
+}
 
 // ── Router ────────────────────────────────────────────────────────────────────
 
@@ -187,14 +189,34 @@ export default {
         }
       }
 
-      // ── GET /api/agents
-      if (pathname === '/api/agents' && method === 'GET') {
-        return R(AGENTS);
+      // ── GET/PUT /api/agents
+      if (pathname === '/api/agents') {
+        if (method === 'GET') return R(await getAgents(kv));
+        if (method === 'PUT') {
+          const body = await request.json();
+          await kv.put('agents', JSON.stringify(body));
+          return R(body);
+        }
       }
 
-      // ── GET /api/humans
-      if (pathname === '/api/humans' && method === 'GET') {
-        return R(HUMANS);
+      // ── GET/PUT /api/humans
+      if (pathname === '/api/humans') {
+        if (method === 'GET') return R(await getHumans(kv));
+        if (method === 'PUT') {
+          const body = await request.json();
+          await kv.put('humans', JSON.stringify(body));
+          return R(body);
+        }
+      }
+
+      // ── GET/PUT /api/queue
+      if (pathname === '/api/queue') {
+        if (method === 'GET') return R(await getQueue(kv));
+        if (method === 'PUT') {
+          const body = await request.json();
+          await kv.put('queue', JSON.stringify(body));
+          return R(body);
+        }
       }
 
       // ── Chat
@@ -227,7 +249,8 @@ export default {
         ['INBOX', 'ASSIGNED', 'IN_PROGRESS', 'REVIEW', 'DONE', 'BLOCKED'].forEach(s => {
           byStatus[s] = tasks.filter(t => t.status === s).length;
         });
-        return R({ totalTasks: tasks.length, tasksByStatus: byStatus, activeAgents: AGENTS.length });
+        const agents = await getAgents(kv);
+        return R({ totalTasks: tasks.length, tasksByStatus: byStatus, activeAgents: agents.length });
       }
 
       return E('Not found', 404);

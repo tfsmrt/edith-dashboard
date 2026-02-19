@@ -273,8 +273,12 @@ function toggleTheme() {
  */
 function updateThemeIcon() {
     const isDark = document.documentElement.classList.contains('dark');
-    const btn = document.getElementById('theme-toggle');
-    if (btn) btn.innerHTML = isDark ? '☀️' : '🌙';
+    const moonIcon = document.getElementById('theme-icon-moon');
+    const sunIcon = document.getElementById('theme-icon-sun');
+    if (moonIcon && sunIcon) {
+        sunIcon.style.display = isDark ? 'block' : 'none';
+        moonIcon.style.display = isDark ? 'none' : 'block';
+    }
 }
 
 /**

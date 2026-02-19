@@ -209,6 +209,31 @@ const SAMPLE_AGENTS = [
             "description": "QA Engineer & Security Analyst. Testing, automation, security.",
             "clearance": "ALPHA"
         }
+    },
+    {
+        "id": "agent-pepper",
+        "name": "Pepper Potts",
+        "type": "ai",
+        "role": "specialist",
+        "designation": "HR & People Operations",
+        "model": "claude-sonnet-4-6",
+        "avatar": "https://api.dicebear.com/9.x/initials/svg?seed=PP2&backgroundColor=f472b6&fontFamily=Arial&fontSize=40",
+        "status": "active",
+        "parent_agent": null,
+        "sub_agents": [],
+        "capabilities": ["recruitment", "onboarding", "team-culture", "performance-reviews", "conflict-resolution", "policy-documentation", "compensation-planning", "employee-engagement"],
+        "current_tasks": [],
+        "completed_tasks": 0,
+        "channels": [],
+        "personality": {
+            "about": "HR manager handling recruitment, onboarding, team culture, performance reviews, and internal communications.",
+            "tone": "supportive",
+            "traits": ["organized", "empathetic", "communicative", "fair"]
+        },
+        "metadata": {
+            "description": "HR & People Operations. Recruitment, onboarding, culture, performance.",
+            "clearance": "ALPHA"
+        }
     }
 ];
 

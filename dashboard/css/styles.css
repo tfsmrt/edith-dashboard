@@ -1802,8 +1802,17 @@ body::after {
     flex: 1;
     min-width: 0;
     display: flex;
-    align-items: center;
-    gap: var(--spacing-xs);
+    flex-direction: column;
+    gap: 1px;
+}
+
+.entity-designation {
+    font-size: 0.68rem;
+    color: hsl(var(--muted-foreground));
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-weight: 400;
 }
 
 .entity-name {

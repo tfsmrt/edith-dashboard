@@ -478,14 +478,15 @@ function renderAgents() {
 
         const channelIcons = getChannelIcons(agent.channels);
 
+        const firstName = agent.name.split(' ')[0];
+        const designation = agent.designation || (agent.metadata && agent.metadata.designation) || '';
+
         return `
             <div class="entity-row agent-row ${agent.role} clickable" data-entity-id="${agent.id}" onclick="openAgentProfile('${agent.id}')">
-                <div class="entity-status ${agent.status}"></div>
                 ${avatarHtml}
                 <div class="entity-info">
-                    <span class="entity-name">${escapeHtml(agent.name)}</span>
-                    ${activeTasks > 0 ? `<span class="entity-active">${activeTasks}</span>` : ''}
-                    ${channelIcons}
+                    <span class="entity-name">${escapeHtml(firstName)}</span>
+                    ${designation ? `<span class="entity-designation">${escapeHtml(designation)}</span>` : ''}
                 </div>
                 <span class="entity-tasks">${agent.completed_tasks || 0}</span>
             </div>
